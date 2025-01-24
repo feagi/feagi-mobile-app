@@ -12,24 +12,24 @@ It should be able to transmit phone-specific inputs to the FEAGI instance, such 
 
 - A phone app that runs properly on Android or iPhone (ideally both)
 
-### ⚙️ Technology
+### Technology
 - [React Native](https://reactnative.dev/)
 - Git/Github
 - Your IDE of choice (Visual Studio Code, etc.)
 
-### 🎨 Screens/Views & UI
+### Screens/Views & UI
 - [ ] Home screen (links to other screens)
 - [ ] BV (Brain Visualizer) screen
 - [ ] Settings screen (should be openable from the BV screen navbar)
 - [ ] Navbar
 - [ ] Responsive: works on different viewports, and in both portrait & landscape mode
 
-### 🧩 Functionality
+### Functionality
 - [ ] Connect to a FEAGI instance running in the playground or NRS (should support both)
 - [ ] Get and transmit phone sensor data to FEAGI instance: webcam, gyroscope, accelerometer
 - [ ] Allow user to edit basic settings and transmit their changes to FEAGI instance:
 
-### ☁️ Nice to Have (not required)
+### Nice to Have (not required)
 - [ ] Functionally identical apps for both iPhone & Android
 - [ ] Light/dark mode
 
