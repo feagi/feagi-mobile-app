@@ -1,16 +1,16 @@
-# Feagi Mobile App
+# FEAGI Mobile App
 
 ## Overview
 
-The objective is to build a simple phone app that can display a FEAGI instance in the Brain Visualizer. 
+The objective is to build a simple React Native phone app that can display a FEAGI instance in the Brain Visualizer. 
 
 It should be able to transmit phone-specific inputs to the FEAGI instance, such as webcam feed and accelerometer.
 
-Ideally, the language used will be React Native, and two functionally identical apps will be built: one for iPhone, and one for Android. The app should also display correctly on tablets.
+*Ideally*, two functionally identical apps will be built: one for iPhone, and one for Android. The app should also display correctly on tablets.
 
 ## Requirements
 
-At least one version of the phone app that runs properly on an iPhone or Android.
+- A phone app that runs properly on Android or iPhone (ideally both)
 
 ### Technology
 - [React Native](https://reactnative.dev/)
@@ -33,14 +33,14 @@ At least one version of the phone app that runs properly on an iPhone or Android
 - [ ] Functionally identical apps for both iPhone & Android
 - [ ] Light/dark mode
 
-### Milestones
+## Milestones
 - [ ] Create the most basic possible app (one screen) and get it running on a phone in test mode
 - [ ] Add all screens from the mockup 
 - [ ] Get the BV running a remote FEAGI instance
 - [ ] Successfully communicate phone sensor data to FEAGI
 - [ ] Successfully communicate settings changes to FEAGI
 
-### Deliverables
+## Deliverables
 - [ ] Complete the phone app
 - [ ] Create a simple FEAGI genome of any kind
 - [ ] Write a technical blog about the experience ([examples](https://neurorobotics.studio/blog))
