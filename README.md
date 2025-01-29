@@ -1,62 +1,71 @@
-# Welcome to the FEAGI App
+# FEAGI Mobile App
 
-## KAT INTRO 😸
+## 🏞️ Overview
 
-GIT READY TO LEARN 📚 Every struggle is a lesson...
+Your objective is to build a simple React Native phone app that can display the Brain Visualizer with an active FEAGI instance.
 
-This boilerplate app has been created from React Native x Expo documentation. (Expo is the standard framework for React Native.)
+It should be able to transmit phone-specific inputs to the FEAGI instance, such as webcam feed and accelerometer.
 
-Let's get started!
+It should have dropdowns from a hamburger menu that allow users to edit settings.
 
-- You will need [Node](https://nodejs.org/en) installed.
+_Ideally_, two functionally identical apps will be built: one for iPhone, and one for Android. The app should also display correctly on tablets.
 
-- Run `npm install -g eas-cli`
+## 🧰 Resources
 
-- Sign up for a free Expo account: https://expo.dev/signup
+- You can view project files in [this](https://drive.google.com/drive/folders/1M7GgSg09hMdSc9r305FQSnyVuaY4O54f) Google Drive folder.
 
-- Run `eas login`
+- Check out SETUP.md for getting started with the codebase.
 
-- Run `npm install`
+## 🤝 Cooperative Element
 
-- Coding for iPhone:
+Rather than building a fullstack app, you are implementing the frontend and sending/receiving data to/from a separate backend. You will need to communicate with Nadji to know which API endpoints to call, what data to pass, and what responses to expect. This reflects a common industry separation between frontend and backend development teams.
 
-  - The React Native docs say that the iOS simulator requires a Mac, but you can also use an external iOS device like an iPhone. In that case, scan the QR code after running the commands in "Get started" below. If you don't have access to an Apple device, skip to "Coding for Android" below.
-  - Mac: In XCode, make sure you have Command Line Tools enabled under the Locations tab
-  - Mac: React Native highly recommends installing Watchman for better performance: `brew install watchman`
+## 📱 Requirements
 
-- Coding for Android:
+- A phone app that runs properly on iPhone or Android (ideally both)
 
-  - If you don't have access to an Apple device, focus on the Android app. It may require some extra legwork, as this codebase was initialized following the iOS simulator steps. Broadly follow the [starter guide](https://docs.expo.dev/get-started/set-up-your-environment/?platform=android&device=simulated&mode=development-build), but make sure to keep it within this unified codebase. Expo supports Android and iOS in the same codebase -- that's the beauty of React Native!
+### Technology
 
-- Run `npx expo start`. In the output, you'll find options to open the app in a
+- [React Native](https://reactnative.dev/)
+- Expo (React Native framework)
+- To display FEAGI, you can use the [Webview](https://github.com/react-native-webview/react-native-webview) library
+- Git/Github
+- Your IDE of choice (Visual Studio Code, etc.)
 
-  - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-  - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-  - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-  - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Screens/Views & UI
 
-## Start Developing
+Reference the UI/UX PDF in the aforementioned Drive folder for details.
 
-- You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- [ ] Home/loading screen
+- [ ] "Plug In" screen
+- [ ] Network Configuration screen
+- [ ] BM (Brain Monitor) screen
+- [ ] Hamburger menu at top of app
+- [ ] Settings dropdowns from hamburger
+- [ ] Responsive: works on different viewports, and in both portrait & landscape mode
 
-- Continue with next steps at Expo's [Start Developing](https://docs.expo.dev/get-started/start-developing/)
+### Functionality
 
-- If you prefer, you can create a simple practice app by following [this Expo guide](https://docs.expo.dev/tutorial/introduction/). It may be a detour, but not a bad idea if you get stuck.
+- [ ] Display a FEAGI instance running in the playground or NRS (should support both)
+- [ ] Get and transmit phone sensor data to FEAGI instance: webcam, gyroscope, accelerometer
+- [ ] Allow user to edit settings and transmit their changes to backend
 
-- When you begin coding the app, you can learn React Native from the lovely docs: https://reactnative.dev/docs/getting-started
+### Nice to Have (not required)
 
-## Get a fresh project
+- [ ] Functionally identical apps for both iPhone & Android
+- [ ] Light/dark mode
 
-When you're ready, run:
+## 🏁 Milestones
 
-```bash
-npm run reset-project
-```
+- [ ] Get the initial codebase up and running on a local simulator or phone
+- [ ] Add all views from the mockup
+- [ ] Get the BV running a remote FEAGI instance
+- [ ] Add the hamburger menu and settings dropdowns
+- [ ] Communicate settings changes to the backend
+- [ ] Communicate phone sensor data to the backend
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## ✅ Deliverables
 
-## Troubleshooting
-
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions
-- Claude.ai, ChatGPT, etc., can be helpful in a pinch
-- If you're struggling to get the initial codebase up and running, try creating a separate practice skeleton by following the [steps](https://reactnative.dev/docs/environment-setup) that I followed to create this codebase. You may identify some missing packages, or at least get some more context.
+- [ ] Complete the phone app
+- [ ] Create a simple FEAGI genome of any kind
+- [ ] Write a technical blog about the experience ([examples](https://neurorobotics.studio/blog))
