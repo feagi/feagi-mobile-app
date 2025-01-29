@@ -10,9 +10,13 @@ It should have dropdowns from a hamburger menu that allow users to edit settings
 
 _Ideally_, two functionally identical apps will be built: one for iPhone, and one for Android. The app should also display correctly on tablets.
 
-You can view project files in [this](https://drive.google.com/drive/folders/1M7GgSg09hMdSc9r305FQSnyVuaY4O54f) Google Drive folder.
+## 🧰 Resources
 
-## Cooperative Element
+- You can view project files in [this](https://drive.google.com/drive/folders/1M7GgSg09hMdSc9r305FQSnyVuaY4O54f) Google Drive folder.
+
+- Check out SETUP.md for getting started with the codebase.
+
+## 🤝 Cooperative Element
 
 Rather than building a fullstack app, you are implementing the frontend and sending/receiving data to/from a separate backend. You will need to communicate with Nadji to know which API endpoints to call, what data to pass, and what responses to expect. This reflects a common industry separation between frontend and backend development teams.
 
