@@ -29,8 +29,8 @@ Let's get started!
 - Coding for Android:
 
   - If you don't have access to an Apple device, focus on the Android app (unless you can find a workaround for iOS simulation on Windows/Linux, which is probable).
-
-  - Broadly follow the [starter guide](https://docs.expo.dev/get-started/set-up-your-environment/?platform=android&device=simulated&mode=development-build), but make sure to keep it within this unified codebase (some of these steps are only for initializing, which we've already done). Expo supports Android and iOS in the same codebase -- that's the beauty of React Native!
+  - Follow the Expo instructions [here](https://docs.expo.dev/workflow/android-studio-emulator/) to set up an Android emulator and build the app.
+  - When you run `npx expo start` as mentioned below, you may need to type ? to see more options and select an Android emulator. Make sure that you have an emulator actively running in Android Studio before you do this.
 
 - BOTH: Run `npx expo start`. In the output, you'll find options to open the app in a
 
@@ -65,6 +65,7 @@ For example, you can simulate pinching in the iOS simulator with option + drag. 
 
 ## Troubleshooting
 
+- NOTE: You will need to rebuild and restart your emulator if you make changes to the assets/ directory!
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions
 - Claude.ai, ChatGPT, etc., can be helpful in a pinch
 - If you're struggling to get the initial codebase up and running, try creating a separate practice skeleton by following the [steps](https://reactnative.dev/docs/environment-setup) that I followed to create this codebase. You may identify some missing packages, or at least get some more context.
