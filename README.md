@@ -2,7 +2,7 @@
 
 ## 🏞️ Overview
 
-Your objective is to build a simple React Native phone app that can display a FEAGI instance in the Brain Visualizer via iframe.
+Your objective is to build a simple React Native phone app that can display the Brain Visualizer with an active FEAGI instance.
 
 It should be able to transmit phone-specific inputs to the FEAGI instance, such as webcam feed and accelerometer.
 
@@ -28,6 +28,7 @@ Rather than building a fullstack app, you are implementing the frontend and send
 
 - [React Native](https://reactnative.dev/)
 - Expo (React Native framework)
+- To display FEAGI, you can use the [Webview](https://github.com/react-native-webview/react-native-webview) library
 - Git/Github
 - Your IDE of choice (Visual Studio Code, etc.)
 

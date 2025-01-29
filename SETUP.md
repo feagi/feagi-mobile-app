@@ -20,15 +20,19 @@ Let's get started!
 
 - Coding for iPhone:
 
-  - The React Native docs say that the iOS simulator requires a Mac, but you can also use an external iOS device like an iPhone. In that case, scan the QR code after running the commands in "Get started" below. If you don't have access to an Apple device, skip to "Coding for Android" below.
+  - The React Native docs say that the iOS simulator requires a Mac, but you can also use an external iOS device like an iPhone. If you don't have access to an Apple device, skip to "Coding for Android" below.
   - Mac: In XCode, make sure you have Command Line Tools enabled under the Locations tab
   - Mac: React Native highly recommends installing Watchman for better performance: `brew install watchman`
+  - iPhone: You DO NOT need an Apple Developer Program account to test the app on your phone. All you need is to install the Expo Go app and sign in to your account. Then, run `npx expo start` in this codebase and select Expo Go in the terminal. Scan the QR code with your phone and choose to open with Expo Go.
+  - Note, when using the simulator, it's best to go with the development build, which is intended for production grade apps.
 
 - Coding for Android:
 
-  - If you don't have access to an Apple device, focus on the Android app. It may require some extra legwork, as this codebase was initialized following the iOS simulator steps. Broadly follow the [starter guide](https://docs.expo.dev/get-started/set-up-your-environment/?platform=android&device=simulated&mode=development-build), but make sure to keep it within this unified codebase. Expo supports Android and iOS in the same codebase -- that's the beauty of React Native!
+  - If you don't have access to an Apple device, focus on the Android app (unless you can find a workaround for iOS simulation on Windows/Linux, which is probable).
 
-- Run `npx expo start`. In the output, you'll find options to open the app in a
+  - Broadly follow the [starter guide](https://docs.expo.dev/get-started/set-up-your-environment/?platform=android&device=simulated&mode=development-build), but make sure to keep it within this unified codebase (some of these steps are only for initializing, which we've already done). Expo supports Android and iOS in the same codebase -- that's the beauty of React Native!
+
+- BOTH: Run `npx expo start`. In the output, you'll find options to open the app in a
 
   - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
   - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
@@ -47,13 +51,17 @@ Let's get started!
 
 ## Get a fresh project
 
-When you're ready, run:
+If you want to remove the Expo starter code, you can run the following command. It will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
 ```bash
 npm run reset-project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Hot Tip ❗
+
+Always assume there is a way to do what you want. React Native is used by millions of developers worldwide, and for apps as major as Discord.
+
+For example, you can simulate pinching in the iOS simulator with option + drag. There are libraries for all sorts of functionalities. Before you give up on something or recreate the wheel, Google, talk to chatbots, and see if what you want already exists.
 
 ## Troubleshooting
 
