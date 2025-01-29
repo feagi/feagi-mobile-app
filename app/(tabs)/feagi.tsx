@@ -1,6 +1,6 @@
-import { ThemedText } from "@/components/ThemedText";
 import { ScrollView, StyleSheet, useColorScheme, View } from "react-native";
 import WebView from "react-native-webview";
+import { ThemedText } from "@/components/ThemedText";
 
 export default function Feagi() {
   const colorScheme = useColorScheme() ?? "light";
@@ -13,14 +13,16 @@ export default function Feagi() {
       ]}
     >
       <ThemedText type="title" style={styles.title}>
-        FEAGI 🧠!
+        FEAGI 🧠
       </ThemedText>
       <View style={{ height: 600 }}>
         <WebView
-          originWhitelist={["*"]}
-          source={require("../assets/feagi/test.html")}
-          // source={{ uri: "https://storage.googleapis.com/nrs_brain_visualizer/1738016771/index.html?ip_address=user-bychgwykbenhsgwqxtnh-feagi.feagi-k8s-production.neurorobotics.studio&port_disabled=true&websocket_url=wss://user-bychgwykbenhsgwqxtnh-feagi.feagi-k8s-production.neurorobotics.studio/p9050&http_type=HTTPS://" }}
-          // ❗ NOTE: The below values, and originWhitelist above, are in place to be ultra-permissive to pinpoint display/interaction issues. They should be altered/eliminated where unneeded or security-vulnerable
+          source={require("../../assets/feagi/index.html")}
+          // Below is temporary hardcoding. These params are old and will keep FEAGI stuck "loading." See README for details, and follow the below params pattern for the local FEAGI.
+          //   source={{
+          //     uri: "https://storage.googleapis.com/nrs_brain_visualizer/1738016771/index.html?ip_address=user-bychgwykbenhsgwqxtnh-feagi.feagi-k8s-production.neurorobotics.studio&port_disabled=true&websocket_url=wss://user-bychgwykbenhsgwqxtnh-feagi.feagi-k8s-production.neurorobotics.studio/p9050&http_type=HTTPS://",
+          //   }}
+          // ❗ NOTE: The below values are in place to be ultra-permissive to pinpoint display/interaction issues. They should be altered/eliminated where unneeded
           style={{ flex: 1 }}
           javaScriptEnabled={true}
           domStorageEnabled={true}

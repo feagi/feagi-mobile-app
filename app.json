@@ -13,6 +13,7 @@
       "bundleIdentifier": "com.feagi.app"
     },
     "android": {
+      "package": "com.feagi.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
