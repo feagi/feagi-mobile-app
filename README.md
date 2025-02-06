@@ -44,6 +44,14 @@ Reference the UI/UX PDF in the aforementioned Drive folder for details.
 - [ ] Settings dropdowns from hamburger
 - [ ] Responsive: works on different viewports, and in both portrait & landscape mode
 
+
+### End Users/Use Cases
+
+- As an AI/ML engineer using FEAGI to develop a robot control system, I want a simple and handy tool to monitor and tune the model during runtime.
+- As a robot operator using FEAGI to control a robot, I want a simple and portable tool that allows for manual and versatile overrides during robot operations.
+- As a robot hobbyist, I want a simple-to-use mobile app that enables me to play with robots.
+
+
 ### Functionality
 
 - [ ] Display a FEAGI instance running in the playground or NRS (should support both)
