@@ -1,14 +1,14 @@
-import { Pressable, Text, View, StyleSheet, Image, TextInput, useEffect } from 'react-native';
+import { Pressable, Text, View, Button, StyleSheet, Image, TextInput } from 'react-native';
 import { Link, router } from 'expo-router';
-import * as React from 'react';
+import React, {useEffect, useState} from "react"
 
 
 export default function Input() {
 
-    React.useEffect(() => {
+    useEffect(() => {
         const timer = setTimeout(() => {
 
-            router.replace('/');
+            router.replace('/plugin');
 
             }, 3000);
 		console.log("done");
@@ -16,21 +16,34 @@ export default function Input() {
 
     }, [])
 
+
+	//THIS CODE WILL SEARCH THE SAVE API THING
+
+
     return (
     <View
 
-    style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        }}
+    style={styles.container}
     >
-	<Text style={{fontSize: 40, marginVertical: 20}}>FEAGI Monitor</Text>
+	<Text style={[styles.text, { marginVertical: 20}]}>FEAGI Monitor</Text>
 	<Image style={{width: 200, height: 200}} source={require('../assets/images/placeholder.png')} />
 
 
     </View>
     );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: '#353839',
+  },
+  text: {
+	  color: 'white',
+	  fontSize: 30,
+  }
+});
 
 export default Input
