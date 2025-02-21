@@ -16,9 +16,9 @@ export default function Signin() {
 	const apiCall = async (api) =>{
           //fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJBZk9RN1BEOFdvZjNDTUtkeEg4Y1RRU2lmSWgyIn0.ipgP6Ifby86zsRDKK6hhW9ZwfVYHP266uaZstwdN25M')
           try{
-	          const response = await fetch(api)
+	          const response = await fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=' + api)
 	          const json = await response.json()
-
+			console.log("json is: " + json.toString());
 	          console.log("hello " + json.feagi_url);
 	          onMagicLinkChange(json.feagi_url);
 	          return(json);
@@ -72,7 +72,7 @@ export default function Signin() {
           placeholderTextColor='gray'
           onChangeText={onChangeText}
           value={text}
-          placeholder="Enter Magic Link"
+          placeholder="Enter API Key"
     />
 
 
@@ -88,6 +88,13 @@ export default function Signin() {
 	<Text style={styles.info}>{"API Connection Number: " + apiText}</Text>
 
 
+	<TouchableOpacity
+    	    style={{ height: 60, width: 200, backgroundColor:'#484a6e', justifyContent: 'center', alignItems: 'center',borderRadius: 10, borderWidth: 3, borderColor:'#2e3133', marginBottom: 50}}
+    	    onPress = {() => router.replace('/godotpage')}>
+
+            <Text style={styles.text}>next</Text>
+
+    </TouchableOpacity>
 
     </View>
     );
