@@ -6,7 +6,7 @@ export default function BrainUnpluggedScreen() {
     <View style={styles.container}>
       {/* Brain image */}
       <Image
-        source={require('./assets//feagi/images/placeholder.png')} 
+        source={require('../assets/images/placeholder.png')} 
         style={styles.brainImage}
         resizeMode="contain"
       />
@@ -50,3 +50,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 });
+
+
+
