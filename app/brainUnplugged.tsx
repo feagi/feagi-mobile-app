@@ -6,14 +6,14 @@ export default function BrainUnpluggedScreen() {
     <View style={styles.container}>
       {/* Brain image */}
       <Image
-        source={require('./assets//feagi/images/placeholder.png')} 
+        source={require('../assets/images/placeholder.png')}
         style={styles.brainImage}
         resizeMode="contain"
       />
-      
+
       {/* Main text */}
       <Text style={styles.title}>Brain is unplugged</Text>
-      
+
       {/* "Plug In" button */}
       <Pressable style={styles.button} onPress={() => console.log("Plug In tapped!")}>
         <Text style={styles.buttonText}>Plug In</Text>
@@ -23,9 +23,12 @@ export default function BrainUnpluggedScreen() {
 }
 
 const styles = StyleSheet.create({
+  text: {
+    fontFamily: "SpaceMono-Regular"
+  },
   container: {
     flex: 1,
-    backgroundColor: '#000000',  // Black background
+    backgroundColor: '#0D0D0D',  // Black background
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -50,3 +53,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 });
+
+export default BrainUnpluggedScreen
