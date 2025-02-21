@@ -5,7 +5,9 @@ export default function RootLayout() {
   <Stack>
     <Stack.Screen name="index" options={{title: "Home", headerShown: false }} />
     <Stack.Screen name="input" options={{title: "Loading...", headerShown: false }} />
-
+    <Stack.Screen name="plugin" options={{title: "Add Link", headerShown: false }} />
+	<Stack.Screen name="signin" options={{title: "Sign In", headerShowm: false}} />
+	<Stack.Screen name="godotpage" options={{title: "Main Page", headerShowm: false}} />
 
 
   </Stack>
