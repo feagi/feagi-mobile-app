@@ -1,17 +1,36 @@
 import { Pressable, Text, View, Button, StyleSheet, Image, TextInput } from 'react-native';
 import { Link, router } from 'expo-router';
 import React, {useEffect, useState} from "react"
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Input() {
 
+
+
+
+	const _storeData = async () => {
+		/*AsyncStorage.setItem(
+          'Key3',
+          'COOL');
+			console.log("hrere ok"!)*/
+
+            AsyncStorage.getItem('Key2', (err, result) => {
+              console.log(result);
+            });
+
+
+
+	}
+
     useEffect(() => {
+		console.log(_storeData());
         const timer = setTimeout(() => {
 
             router.replace('/plugin');
 
             }, 3000);
 		console.log("done");
+
 		return () => clearTimeout(timer);
 
     }, [])

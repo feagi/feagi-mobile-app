@@ -1,7 +1,7 @@
 import { View, ScrollView } from "react-native";
 import WebView from "react-native-webview";
 
-
+import {AsyncStorage} from 'react-native';
 
 
 export default function GodotPage() {
