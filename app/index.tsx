@@ -9,11 +9,11 @@ import {AsyncStorage} from 'react-native';
 
 export default function Index() {
 
-  const [text, onChangeText] = useState(0);
-  const [number, onChangeNumber] = useState(0);
+  const [text, onChangeText] = useState('');
+  const [number, onChangeNumber] = useState('');
   const [API, onAPIChange] = useState('');
   const [magicLink, onMagicLinkChange] = useState('');
-  const [apiText, onApiTextChange] = useState(0);
+  const [apiText, onApiTextChange] = useState('');
 
 
 
@@ -77,11 +77,5 @@ const styles = StyleSheet.create({
 	  color: 'white',
   }
 });
-
-
-
-export default Index;
-
-
 
 
