@@ -2,6 +2,7 @@ import { Pressable, Text, View, Button, StyleSheet, Image, TextInput } from 'rea
 import { Link, router } from 'expo-router';
 import React, {useEffect, useState} from "react"
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LoginHandle from "./LoginHandle";
 
 export default function Input() {
 
@@ -9,55 +10,108 @@ export default function Input() {
 
 
 	const _storeData = async () => {
-		/*AsyncStorage.setItem(
-          'Key3',
-          'COOL');
-			console.log("hrere ok"!)*/
+		//await AsyncStorage.setItem('Key1', 'Ben1');
+		console.log("hrere ok"!)
+		await AsyncStorage.getItem('Key1', (err, result) => {
+			console.log(result + "the result");
+		});
+	}
 
-            AsyncStorage.getItem('Key2', (err, result) => {
-              console.log(result);
-            });
+	const _checkLogin = () => {
+		return new Promise((resolved) =>{
+
+			try{
+				AsyncStorage.getAllKeys((err, keys) => {
+                console.log("keys: " + keys);
+                if(keys === undefined || keys.length == 0){
+                    console.log("no keys, returning true")
+                    resolved(true);
+                    }
+                else{
+                    console.log("yes keys, returning false")
+                    resolved(false);
+                    }
+                });
+            } catch(error) {
+                console.log("uhhh");
+
+            }
 
 
+
+			});
 
 	}
 
-    useEffect(() => {
-		console.log(_storeData());
-        const timer = setTimeout(() => {
 
-            router.replace('/plugin');
 
-            }, 3000);
-		console.log("done");
+	   /*AsyncStorage.multiGet(keys, (err, stores) => {
+		 stores.map((result, i, store) => {
+		   // get at each store's key/value so you can work with it
+		   let key = store[i][0];
+		   let value = store[i][1];
+		   console.log("key: " + key + " Value: " + value);
+		   AsyncStorage.removeItem(key);
+		 });
+	   });*/
 
-		return () => clearTimeout(timer);
 
-    }, [])
+
+
+
+
+	useEffect(() => {
+
+		const userLogin = async () =>{
+
+			let boolCheck = await _checkLogin();
+			console.log("boolean " + boolCheck);
+			if(await _checkLogin()){
+				console.log("no keys")
+				const timer = setTimeout(() => {
+
+                    router.replace('/plugin');
+
+                    }, 3000);
+                    console.log("done");
+
+                return () => clearTimeout(timer);
+
+			}
+			else{
+				console.log("yes keys going to godot page");
+                router.replace('/godotpage');
+			}
+		}
+		userLogin();
+
+
+	}, [])
+
 
 
 	//THIS CODE WILL SEARCH THE SAVE API THING
 
 
-    return (
-    <View
+	return (
+	<View
 
-    style={styles.container}
-    >
+	style={styles.container}
+	>
 	<Text style={[styles.text, { marginVertical: 20}]}>FEAGI Monitor</Text>
 	<Image style={{width: 200, height: 200}} source={require('../assets/images/placeholder.png')} />
 
 
-    </View>
-    );
+	</View>
+	);
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: '#353839',
+	flex: 1,
+	justifyContent: "center",
+	alignItems: "center",
+	backgroundColor: '#353839',
   },
   text: {
 	  color: 'white',
