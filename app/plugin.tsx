@@ -11,23 +11,24 @@ export default function Plugin() {
 	const _retrieveData = async () => {
                    try {
                      //const value = await AsyncStorage.getItem('KEY1');
-                     console.log("get ketys test");
-                     const keys = await AsyncStorage.getAllKeys();
-                     const result = await AsyncStorage.multiGet(keys);
-
-                     console.log(result.map(req => JSON.parse(req)).forEach(console.log));
-
-                     console.log(value);
-
-                     if (value !== null) {
-                       // We have data!!
-                       console.log(value);
-                       onChangeText(value);
-                       return value
-                     }
-             		else{
-             			console.log("cant find")
-             			}
+                     AsyncStorage.getAllKeys((err, keys) => {
+						 console.log(keys);
+						 if(keys === undefined || keys.length == 0){
+							 console.log("no keys")
+							 }
+						 else{
+							 console.log("yes keys")
+							 }
+                       AsyncStorage.multiGet(keys, (err, stores) => {
+                         stores.map((result, i, store) => {
+                           // get at each store's key/value so you can work with it
+                           let key = store[i][0];
+                           let value = store[i][1];
+                           console.log("key: " + key + " Value: " + value);
+                           AsyncStorage.removeItem(key);
+                         });
+                       });
+                     });
                    } catch (error) {
     				   console.log(error);
                      // Error retrieving data
