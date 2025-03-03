@@ -5,6 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Modal,
+  TouchableWithoutFeedback,
+  Switch
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
@@ -14,22 +17,24 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 // Define a type for control objects
 type Control = {
   id: number;
-  type: '1D' | '2D';
+  type: '1D' | '2D' | '1DT';
   value?: number; // For 1D controls
   valueX?: number; // For 2D controls (X-axis)
   valueY?: number; // For 2D controls (Y-axis)
+  switch?: boolean;
 };
 
 // Dummy data for initial control boxes
 const initialControls: Control[] = [
   { id: 1, type: '1D', value: 50 },
   { id: 2, type: '2D', valueX: 50, valueY: 50 },
-  { id: 3, type: '1D', value: 50 },
+  { id: 3, type: '1DT', switch: false},
 ];
 
 const CorticalPage = () => {
   const router = useRouter();
   const [controls, setControls] = useState<Control[]>(initialControls);
+  const [modalVisible, setModalVisible] = useState(false);
 
   // Add a new control box
   const addControl = () => {
@@ -42,6 +47,15 @@ const CorticalPage = () => {
     };
     setControls([...controls, newControl]);
   };
+
+  const addSwitch = () => {
+    const newControl: Control = {
+      id: Date.now(), // Unique ID for each control
+      type: '1DT', // Randomly assign 1D or 2D for now
+      switch: false
+    };
+    setControls([...controls, newControl]);
+  }
 
   // Delete a control box
   const deleteControl = (id: number) => {
@@ -66,6 +80,14 @@ const CorticalPage = () => {
     );
   };
 
+  const updateSwitch = (id: number, toggle: boolean) => {
+    setControls(
+      controls.map((control) =>
+        control.id === id ? { ...control, switch: !toggle } : control
+      )
+    );
+  }
+
   // Render a single control box
   const renderControl = (control: Control) => {
     return (
@@ -82,7 +104,11 @@ const CorticalPage = () => {
       >
         <View style={styles.controlBox}>
           <Text style={styles.controlTitle}>
-            {control.type === '1D' ? '1D Cortical Area' : '2D Cortical Area'}
+          {control.type === '1D' 
+            ? '1D Cortical Area' 
+            : control.type === '2D' 
+            ? '2D Cortical Area' 
+            : 'Switch Control'}
           </Text>
           {control.type === '1D' ? (
             <Slider
@@ -96,7 +122,7 @@ const CorticalPage = () => {
               maximumTrackTintColor="#555"
               thumbTintColor="#484a6e"
             />
-          ) : (
+          ) : control.type === '2D' ? (
             <>
               <Slider
                 style={styles.slider}
@@ -121,7 +147,32 @@ const CorticalPage = () => {
                 thumbTintColor="#484a6e"
               />
             </>
-          )}
+          ) : (
+            <>
+              <View style={styles.switchView}>
+                <Text style={styles.switchText}>
+                  {control.switch === true ? '1' : '0'}
+                </Text>
+
+                <View style={styles.switch}>
+                  <Switch style={{ transform: [{ scaleX: 1.1 }, { scaleY: 1.1 }] }}
+                    value={control.switch}
+                    onValueChange={(value) => updateSwitch(control.id, !value)}
+                  >
+                  </Switch>
+                </View>
+
+                {control.switch == false ? (
+                  <TouchableOpacity style={styles.activateButton} onPress={() => setModalVisible(true)}>
+                    <Text style={styles.addButtonText}>Activate</Text>
+                  </TouchableOpacity>
+                ) : (null)}
+
+                
+              </View>
+            </>
+        )}
+
         </View>
       </Swipeable>
     );
@@ -131,10 +182,35 @@ const CorticalPage = () => {
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Cortical Controls</Text>
-        <TouchableOpacity style={styles.addButton} onPress={addControl}>
+        <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+      >
+        <TouchableOpacity 
+            style={styles.modalContainer}
+            activeOpacity={1} 
+            onPressOut={() => setModalVisible(false)}
+        >
+          <TouchableWithoutFeedback>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Add a Cortical Area</Text>
+                  <ScrollView>
+
+                    <TouchableOpacity style={styles.modalButton} onPress={() => {addControl(), setModalVisible(false)}}><Text>Servo Control</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.modalButton} onPress={() => {addControl(), setModalVisible(false)}}><Text>Gyroscope</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.modalButton} onPress={() => {addControl(), setModalVisible(false)}}><Text>1D Cortical Area</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.modalButton} onPress={() => {addControl(), setModalVisible(false)}}><Text>2D Cortical Area</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.modalButton} onPress={() => {addSwitch(), setModalVisible(false)}}><Text>Switch</Text></TouchableOpacity>
+                  </ScrollView> 
+                </View>
+          </TouchableWithoutFeedback>
+        </TouchableOpacity>
+      </Modal>
 
       <ScrollView style={styles.scrollView}>
         {controls.map((control) => renderControl(control))}
@@ -196,11 +272,66 @@ const styles = StyleSheet.create({
     width: 100,
     borderRadius: 10,
     marginBottom: 10,
+    marginLeft: 10
   },
   deleteButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)'
+  },
+  modalContent: {
+    backgroundColor: 'blue',
+    borderRadius: 20,
+    width: '95%',
+    height: '80%',
+  },
+  modalTitle: {
+    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    padding: 10,
+    marginTop: 10,
+  },
+  modalButton: {
+    textAlign: 'center',
+    padding: 10,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    marginTop: 20,
+    backgroundColor: 'white',
+    borderRadius: 5,
+    width: '90%',
+    
+  },
+  switchView: {
+    flexDirection: 'row',
+    marginTop: 2,
+  },
+  switchText: {
+    textAlign: 'left',
+    margin: 5,
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    position: 'static'
+  },
+  switch: {
+    alignContent: 'center',
+    marginLeft: 10,
+  },
+  activateButton: {
+    marginLeft: '40%',
+    textAlign: 'center',
+    backgroundColor: 'black',
+    borderRadius: 5,
+    padding: 5
   },
 });
 
