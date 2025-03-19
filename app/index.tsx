@@ -2,6 +2,7 @@ import { Text, View , StyleSheet, TextInput, Button, Alert, Pressable } from "re
 import { Link } from 'expo-router';
 //import * as React from 'react';
 import React, {useEffect, useState} from "react"
+import {AsyncStorage} from 'react-native';
 
 
 

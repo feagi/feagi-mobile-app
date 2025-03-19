@@ -1,7 +1,8 @@
 import { Pressable, Text, View, StyleSheet, TouchableOpacity, Button, Image, TextInput, Alert } from 'react-native';
 import { Link, router } from 'expo-router';
-import React, { useEffect, useState } from "react"
-
+import React, {useEffect, useState} from "react"
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import LoginHandle from "./LoginHandle";
 
 export default function Signin() {
 
@@ -13,14 +14,18 @@ export default function Signin() {
 
   //This is where the API methods go!
 
+
+
+//THIS CODE IS GOING TO await AsyncStorage.setItem('Key1', 'Ben1');
 	const apiCall = async (api: string) =>{
           //fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJBZk9RN1BEOFdvZjNDTUtkeEg4Y1RRU2lmSWgyIn0.ipgP6Ifby86zsRDKK6hhW9ZwfVYHP266uaZstwdN25M')
           try{
 	          const response = await fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=' + api)
 	          const json = await response.json()
-			console.log("json is: " + json.toString());
+	          console.log("json is: " + json.toString());
 	          console.log("hello " + json.feagi_url);
 	          onMagicLinkChange(json.feagi_url);
+	          await AsyncStorage.setItem(api, json.feagi_url);
 	          return(json);
           }
     	  catch(error) {
