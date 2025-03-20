@@ -30,7 +30,7 @@ export default function GodotPage() {
 		setMenuVisible(!menuVisible);
 	};
 
-	//close the dropdown menu when clicking outside 
+	//close the dropdown menu when clicking outside
 	const closeMenu = () => {
 		if (menuVisible) {
 			Animated.timing(slideAnim, {
@@ -102,46 +102,48 @@ export default function GodotPage() {
 					},
 				]}
 			>
-				<TouchableOpacity
-					style={styles.menuItem}
-					onPress={() => {
-						router.push('/corticalControl');
-						closeMenu();
-					}}
-				>
-					<Ionicons name="hand-left-outline" size={24} color="white" />
-					<Text style={styles.menuItemText}>Cortical Controls</Text>
-				</TouchableOpacity>
+				<ScrollView contentContainerStyle={styles.menuScrollContainer}>
+					<TouchableOpacity
+						style={styles.menuItem}
+						onPress={() => {
+							router.push('/corticalControl');
+							closeMenu();
+						}}
+					>
+						<Ionicons name="hand-left-outline" size={24} color="white" />
+						<Text style={styles.menuItemText}>Cortical Controls</Text>
+					</TouchableOpacity>
 
-				<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
-					<Ionicons name="bulb-outline" size={24} color="white" />
-					<Text style={styles.menuItemText}>Brain Settings</Text>
-				</TouchableOpacity>
+					<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<Ionicons name="bulb-outline" size={24} color="white" />
+						<Text style={styles.menuItemText}>Brain Settings</Text>
+					</TouchableOpacity>
 
-				<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
-					<Ionicons name="enter-outline" size={24} color="white" />
-					<Text style={styles.menuItemText}>Input Settings</Text>
-				</TouchableOpacity>
+					<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<Ionicons name="enter-outline" size={24} color="white" />
+						<Text style={styles.menuItemText}>Input Settings</Text>
+					</TouchableOpacity>
 
-				<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
-					<Ionicons name="log-out-outline" size={24} color="white" />
-					<Text style={styles.menuItemText}>Output Settings</Text>
-				</TouchableOpacity>
+					<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<Ionicons name="log-out-outline" size={24} color="white" />
+						<Text style={styles.menuItemText}>Output Settings</Text>
+					</TouchableOpacity>
 
-				<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
-					<Ionicons name="cog-outline" size={24} color="white" />
-					<Text style={styles.menuItemText}>Mobile Settings</Text>
-				</TouchableOpacity>
+					<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<Ionicons name="cog-outline" size={24} color="white" />
+						<Text style={styles.menuItemText}>Mobile Settings</Text>
+					</TouchableOpacity>
 
-				<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
-					<Ionicons name="wifi-outline" size={24} color="white" />
-					<Text style={styles.menuItemText}>Connectivity</Text>
-				</TouchableOpacity>
+					<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<Ionicons name="wifi-outline" size={24} color="white" />
+						<Text style={styles.menuItemText}>Connectivity</Text>
+					</TouchableOpacity>
 
-				<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
-					<Ionicons name="help-outline" size={24} color="white" />
-					<Text style={styles.menuItemText}>Help</Text>
-				</TouchableOpacity>
+					<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<Ionicons name="help-outline" size={24} color="white" />
+						<Text style={styles.menuItemText}>Help</Text>
+					</TouchableOpacity>
+				</ScrollView>
 			</Animated.View>
 
 			{/* close the menu when clicking outside */}
@@ -244,5 +246,9 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		backgroundColor: 'rgba(0, 0, 0, 0.5)',
 		zIndex: 1,
+	},
+	menuScrollContainer: {
+		flexGrow: 1,
+		paddingBottom: 20,
 	},
 });
