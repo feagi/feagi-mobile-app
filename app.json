@@ -3,7 +3,7 @@
     "name": "feagi-app",
     "slug": "feagi-app",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "DEFAULT",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
