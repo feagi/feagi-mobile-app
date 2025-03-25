@@ -34,7 +34,7 @@ const initialControls: Control[] = [
 const CorticalPage = () => {
   const router = useRouter();
   const [controls, setControls] = useState<Control[]>(initialControls);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false); 
 
   // Add a new control box
   const addControl = () => {

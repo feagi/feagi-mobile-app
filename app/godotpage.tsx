@@ -4,11 +4,16 @@ import WebView from "react-native-webview";
 import React, { useEffect, useRef, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import HelpModal from "./helpModal"; // Import the help
+
 
 export default function GodotPage() {
 	const [godot, onGodotChange] = useState('');
 	const [menuVisible, setMenuVisible] = useState(false); // state for hamburger menu drop down
 	const slideAnim = useRef(new Animated.Value(-250)).current; // Animation for sliding menu
+
+	const [helpModalVisible, setHelpModalVisible] = useState(false); // State for Help Modal
+
 
 	// Toggle the dropdown menu
 	const toggleMenu = () => {
@@ -138,7 +143,10 @@ export default function GodotPage() {
 					<Text style={styles.menuItemText}>Connectivity</Text>
 				</TouchableOpacity>
 
-				<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+				<TouchableOpacity
+					style={styles.menuItem}
+					onPress={() => setHelpModalVisible(true)} // Show Help Modal
+				>
 					<Ionicons name="help-outline" size={24} color="white" />
 					<Text style={styles.menuItemText}>Help</Text>
 				</TouchableOpacity>
@@ -152,6 +160,10 @@ export default function GodotPage() {
 					onPress={closeMenu}
 				/>
 			)}
+			<HelpModal
+				visible={helpModalVisible}
+				onClose={() => setHelpModalVisible(false)} // Close the modal when clicked outside or the close button
+			/>
 
 			<ScrollView style={{ flex: 1 }}>
 				<View style={{ height: 600 }}>
