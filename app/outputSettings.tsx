@@ -9,10 +9,10 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-const brainSettingsPage = () => {
+const OutputSettingsPage = () => {
     const router = useRouter();
 
-    //Go back godotpage
+    //Go back to godotpage
     const goBack = () => {
         router.push('/godotpage');
     };
@@ -20,7 +20,7 @@ const brainSettingsPage = () => {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Brain Settings</Text>
+                <Text style={styles.title}>Output Settings</Text>
                 <TouchableOpacity onPress={goBack} style={styles.closeButton}>
                     <Ionicons name="close" size={24} color="#fff" />
                 </TouchableOpacity>
@@ -84,4 +84,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default brainSettingsPage;
+export default OutputSettingsPage;

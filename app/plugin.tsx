@@ -51,7 +51,7 @@ export default function Plugin() {
     style={styles.container}
     >
 	<Image style={{width: 200, height: 200, margin: 50}} source={require('../assets/images/placeholderplugin.png')} />
-	<Text>{text}</Text>
+
     <TouchableOpacity
 	    style={{ height: 60, width: 200, backgroundColor:'#484a6e', justifyContent: 'center', alignItems: 'center',borderRadius: 10, borderWidth: 3, borderColor:'#2e3133'}}
 	    onPress = {() => router.replace('/signin')}>
