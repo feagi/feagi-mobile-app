@@ -3,7 +3,7 @@
     "name": "feagi-app",
     "slug": "feagi-app",
     "version": "1.0.0",
-    "orientation": "DEFAULT",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
@@ -43,7 +43,8 @@
           "cameraPermission": "Allow feagi-app to access your camera",
           "microphonePermission": "Allow feagi-app to access your microphone",
           "recordAudioAndroid": true
-        }]
+        }],
+      "expo-screen-orientation"
     ],
     "experiments": {
       "typedRoutes": true
