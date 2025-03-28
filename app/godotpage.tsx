@@ -114,17 +114,29 @@ export default function GodotPage() {
 						<Text style={styles.menuItemText}>Cortical Controls</Text>
 					</TouchableOpacity>
 
-					<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+					<TouchableOpacity style={styles.menuItem}
+						onPress={() => {
+							router.push('/brainSettings')
+							closeMenu();
+						}}>
 						<Ionicons name="bulb-outline" size={24} color="white" />
 						<Text style={styles.menuItemText}>Brain Settings</Text>
 					</TouchableOpacity>
 
-					<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+					<TouchableOpacity style={styles.menuItem}
+						onPress={() => {
+							router.push('/inputSettings');
+							closeMenu();
+						}}>
 						<Ionicons name="enter-outline" size={24} color="white" />
 						<Text style={styles.menuItemText}>Input Settings</Text>
 					</TouchableOpacity>
 
-					<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+					<TouchableOpacity style={styles.menuItem}
+						onPress={() => {
+							router.push('/outputSettings');
+							closeMenu();
+						}}>
 						<Ionicons name="log-out-outline" size={24} color="white" />
 						<Text style={styles.menuItemText}>Output Settings</Text>
 					</TouchableOpacity>

@@ -128,7 +128,7 @@ const CorticalPage = () => {
             // Create the payload according to the API documentation
             const payload = {
                 "stimulation_payload": {
-                    [control.corticalId]: [[index, 0, value]]
+                    [control.corticalId]: [[index, 0, 0, value]]
                 }
             };
 
@@ -162,7 +162,7 @@ const CorticalPage = () => {
             // Create the payload according to the API documentation
             const payload = {
                 "stimulation_payload": {
-                    [control.corticalId]: [[index, 0, value]]
+                    [control.corticalId]: [[index, 0, 0, value]]
                 }
             };
 
@@ -207,8 +207,14 @@ const CorticalPage = () => {
                 },
                 body: JSON.stringify(payload)
             });
-
+            const status = response.status;
             console.log('Activation sent:', response.status);
+
+            // Handle the response body (could be null or string)
+            const responseBody = await response.text();
+            if (responseBody && responseBody !== "null") {
+                console.log('Response data:', responseBody);
+            }
         } catch (error) {
             console.error('Error sending activation:', error);
         }
