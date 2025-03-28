@@ -3,14 +3,17 @@
     "name": "feagi-app",
     "slug": "feagi-app",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.feagi.app"
+      "bundleIdentifier": "com.feagi.app",
+      "infoPlist": {
+        "NSMotionUsageDescription": "This app uses the accelerometer to detect motion."
+      }
     },
     "android": {
       "package": "com.feagi.app",
@@ -34,7 +37,14 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      ["expo-camera",
+        {
+          "cameraPermission": "Allow feagi-app to access your camera",
+          "microphonePermission": "Allow feagi-app to access your microphone",
+          "recordAudioAndroid": true
+        }],
+      "expo-screen-orientation"
     ],
     "experiments": {
       "typedRoutes": true

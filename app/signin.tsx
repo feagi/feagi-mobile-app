@@ -20,16 +20,20 @@ export default function Signin() {
 	const apiCall = async (api: string) =>{
           //fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJBZk9RN1BEOFdvZjNDTUtkeEg4Y1RRU2lmSWgyIn0.ipgP6Ifby86zsRDKK6hhW9ZwfVYHP266uaZstwdN25M')
           try{
-	          const response = await fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=' + api)
+			  console.log("https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=" + api);
+              const response = await fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=' + api)
+
 	          const json = await response.json()
 	          console.log("json is: " + json.toString());
 	          console.log("hello " + json.feagi_url);
 	          onMagicLinkChange(json.feagi_url);
-	          await AsyncStorage.setItem(api, json.feagi_url);
+	          console.log("feagi url: " + json.feagi_url);
+	          await AsyncStorage.setItem("user", (json.feagi_url).toString());
 	          return(json);
           }
     	  catch(error) {
 			  console.error(error);
+			  console.log("oh boy");
             }
 		};
 
