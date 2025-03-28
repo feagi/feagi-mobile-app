@@ -24,8 +24,7 @@ export default function GodotPage() {
 	const [tempCameraEnable, setTempCameraEnable] = useState(false);
 	const [permission, requestPermission] = useCameraPermissions();
 	// const [hasAccelerometerPermission, setHasAccelerometerPermission] = useState(false);
-
-	useEffect (() => {
+	useEffect(() => {
 		initializeSocket();
 	}, []);
 
@@ -49,8 +48,8 @@ export default function GodotPage() {
 				});
 				Accelerometer.setUpdateInterval(1000);
 			}
-		// } else if (tempAccelEnable && !hasAccelerometerPermission) {
-		// 	handleAccelPermission();
+			// } else if (tempAccelEnable && !hasAccelerometerPermission) {
+			// 	handleAccelPermission();
 		} else {
 			Accelerometer.removeAllListeners();
 		}
@@ -139,9 +138,9 @@ export default function GodotPage() {
 		const value = await AsyncStorage.getItem("user");
 
 		//AsyncStorage.getAllKeys((err, keys) => {
-			//AsyncStorage.multiGet(keys, (err, stores) => {
-				//stores.map((result, i, store) => {
-					// get at each store's key/value so you can work with it
+		//AsyncStorage.multiGet(keys, (err, stores) => {
+		//stores.map((result, i, store) => {
+		// get at each store's key/value so you can work with it
 
 		let httpsLink = value;
 		let concatLink = httpsLink.slice(8);
@@ -195,17 +194,26 @@ export default function GodotPage() {
 							<Text style={styles.menuItemText}>Cortical Controls</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<TouchableOpacity style={styles.menuItem} onPress={() => {
+							router.push('/brainSettings');
+							closeMenu();
+						}}>
 							<Ionicons name="bulb-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Brain Settings</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<TouchableOpacity style={styles.menuItem} onPress={() => {
+							router.push('/inputSettings');
+							closeMenu();
+						}}>
 							<Ionicons name="enter-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Input Settings</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<TouchableOpacity style={styles.menuItem} onPress={() => {
+							router.push('/outputSettings');
+							closeMenu();
+						}}>
 							<Ionicons name="log-out-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Output Settings</Text>
 						</TouchableOpacity>
