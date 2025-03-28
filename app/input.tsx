@@ -17,47 +17,26 @@ export default function Input() {
 		});
 	}
 
-	const _checkLogin = () => {
-		return new Promise((resolved) =>{
+	const _checkLogin = async () => {
+		const userData = await AsyncStorage.getItem("user");
+		try{
+			if(userData === null){
+				console.log("no key");
+				return true;
 
-			try{
-				AsyncStorage.getAllKeys((err, keys) => {
-                console.log("keys: " + keys);
-                if(keys === undefined || keys.length == 0){
-                    console.log("no keys, returning true")
-                    resolved(true);
-                    }
-                else{
-                    console.log("yes keys, returning false")
-                    resolved(false);
-                    }
-                });
-            } catch(error) {
-                console.log("uhhh");
+			}
+			else{
 
-            }
-
-
-
-			});
+				console.log("userdata: " + userData);
+				return false;
+			}
+		}
+		catch(error){
+			console.log(error);
+			console.log("uhhh");
+		}
 
 	}
-
-
-
-	   /*AsyncStorage.multiGet(keys, (err, stores) => {
-		 stores.map((result, i, store) => {
-		   // get at each store's key/value so you can work with it
-		   let key = store[i][0];
-		   let value = store[i][1];
-		   console.log("key: " + key + " Value: " + value);
-		   AsyncStorage.removeItem(key);
-		 });
-	   });*/
-
-
-
-
 
 
 	useEffect(() => {

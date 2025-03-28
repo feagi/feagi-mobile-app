@@ -47,6 +47,7 @@ export default function GodotPage() {
 			AsyncStorage.multiGet(keys, (err, stores) => {
 				stores.map((result, i, store) => {
 					// get at each store's key/value so you can work with it
+					console.log("deleting: ");
 					let key = store[i][0];
 					let value = store[i][1];
 					console.log("key: " + key + " Value: " + value);
@@ -56,32 +57,34 @@ export default function GodotPage() {
 		});
 	}
 
-	const plugGodot = () => {
-		AsyncStorage.getAllKeys((err, keys) => {
-			AsyncStorage.multiGet(keys, (err, stores) => {
-				stores.map((result, i, store) => {
+	const plugGodot = async () => {
+
+
+		const value = await AsyncStorage.getItem("user");
+
+		//AsyncStorage.getAllKeys((err, keys) => {
+			//AsyncStorage.multiGet(keys, (err, stores) => {
+				//stores.map((result, i, store) => {
 					// get at each store's key/value so you can work with it
-					let key = store[i][0];
-					let value = store[i][1];
 
-					let httpsLink = value;
-					let concatLink = httpsLink.slice(8);
-					let wssLink = value.replace('https', 'wss');
-					console.log("reg: " + httpsLink);
-					console.log("concat: " + concatLink);
-					console.log("wss: " + wssLink);
-					//8
-					let godotLink = ("https://storage.googleapis.com/nrs_brain_visualizer/1738016771/index.html?ip_address=" + concatLink + "&port_disabled=true&websocket_url=" + wssLink + "/p9055&http_type=HTTPS://");
-					console.log("got: " + godotLink);
-					onGodotChange(godotLink);
-					//https://user-pmcmwytxjfjfvjncvjkb-feagi.feagi-k8s-production.neurorobotics.studio
-					//"https://storage.googleapis.com/nrs_brain_visualizer/1738016771/index.html?ip_address=user-tcdxbrjxezbxvslzratc-feagi.feagi-k8s-production.neurorobotics.studio&port_disabled=true&websocket_url=wss://user-tcdxbrjxezbxvslzratc-feagi.feagi-k8s-production.neurorobotics.studio/p9055&http_type=HTTPS://",
+		let httpsLink = value;
+		let concatLink = httpsLink.slice(8);
+		let wssLink = value.replace('https', 'wss');
+		console.log("reg: " + httpsLink);
+		console.log("concat: " + concatLink);
+		console.log("wss: " + wssLink);
+		//8
+		let godotLink = ("https://storage.googleapis.com/nrs_brain_visualizer/1738016771/index.html?ip_address=" + concatLink + "&port_disabled=true&websocket_url=" + wssLink + "/p9055&http_type=HTTPS://");
+		console.log("got: " + godotLink);
+		onGodotChange(godotLink);
+		//https://user-pmcmwytxjfjfvjncvjkb-feagi.feagi-k8s-production.neurorobotics.studio
+		//"https://storage.googleapis.com/nrs_brain_visualizer/1738016771/index.html?ip_address=user-tcdxbrjxezbxvslzratc-feagi.feagi-k8s-production.neurorobotics.studio&port_disabled=true&websocket_url=wss://user-tcdxbrjxezbxvslzratc-feagi.feagi-k8s-production.neurorobotics.studio/p9055&http_type=HTTPS://",
 
-					//return godotLink;
+		//return godotLink;
 
-				});
-			});
-		});
+		//		});
+		//	});
+		//});
 
 
 	}
