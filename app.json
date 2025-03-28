@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.feagi.app"
+      "bundleIdentifier": "com.feagi.app",
+      "infoPlist": {
+        "NSMotionUsageDescription": "This app uses the accelerometer to detect motion."
+      }
     },
     "android": {
       "package": "com.feagi.app",
@@ -34,7 +37,13 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      ["expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }]
     ],
     "experiments": {
       "typedRoutes": true

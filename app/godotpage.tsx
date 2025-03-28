@@ -6,37 +6,80 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import { Switch, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Camera, useCameraPermissions } from 'expo-camera';
+import { sendData, initializeSocket } from './websocket';
 
 export default function GodotPage() {
 	const [godot, onGodotChange] = useState('');
 	const [menuVisible, setMenuVisible] = useState(false); // state for hamburger menu drop down
 	const slideAnim = useRef(new Animated.Value(-250)).current; // Animation for sliding menu
 	const [mobileSettingsModalVisible, setMobileSettingsModalVisible] = useState(false);
-  	const [isAccelerometerEnabled, setIsAccelerometerEnabled] = useState(false);
- 	const [isGyroscopeEnabled, setIsGyroscopeEnabled] = useState(false);
+	const [isAccelerometerEnabled, setIsAccelerometerEnabled] = useState(false);
+	const [isGyroscopeEnabled, setIsGyroscopeEnabled] = useState(false);
+	const [isCameraEnabled, setIsCameraEnabled] = useState(false);
 	const [tempAccelEnable, setTempAccelEnable] = useState(false);
 	const [tempGyroEnable, setTempGyroEnable] = useState(false);
+	const [tempCameraEnable, setTempCameraEnable] = useState(false);
+	const [permission, requestPermission] = useCameraPermissions();
+	// const [hasAccelerometerPermission, setHasAccelerometerPermission] = useState(false);
+
+	useEffect (() => {
+		initializeSocket();
+	}, []);
+
+	// const handleAccelPermission = async () => {
+	// 	const { status: permissionStatus } = await Accelerometer.requestPermissionsAsync();
+
+	// 	if (permissionStatus === 'granted') {
+	// 		setHasAccelerometerPermission(true);
+	// 	}
+	// }
 
 	const updateSensoryData = () => {
 		setIsAccelerometerEnabled(tempAccelEnable);
 		setIsGyroscopeEnabled(tempGyroEnable);
+		setIsCameraEnabled(tempCameraEnable);
 		if (tempAccelEnable) {
-			Accelerometer.addListener(data => {
-			console.log('Accelerometer data:', data);
-			});
-			Accelerometer.setUpdateInterval(500);
+			if (!Accelerometer.hasListeners()) {
+				Accelerometer.addListener(data => {
+					console.log('Accelerometer data:', data);
+					sendData(JSON.stringify(data));
+				});
+				Accelerometer.setUpdateInterval(1000);
+			}
+		// } else if (tempAccelEnable && !hasAccelerometerPermission) {
+		// 	handleAccelPermission();
 		} else {
 			Accelerometer.removeAllListeners();
 		}
 		if (tempGyroEnable) {
-			Gyroscope.addListener(data => {
-				console.log('Gyroscope data:', data);
+			if (!Gyroscope.hasListeners()) {
+				Gyroscope.addListener(data => {
+					console.log('Gyroscope data:', data);
+					sendData(JSON.stringify(data));
 				});
-				Gyroscope.setUpdateInterval(500);
+				Gyroscope.setUpdateInterval(1000);
+			}
 		} else {
 			Gyroscope.removeAllListeners();
 		}
+		if (tempCameraEnable) {
+			if (!permission?.granted) {
+				requestPermission();
+				updateSensoryData();
+			}
+			else {
+				console.log("Camera is activated");
+			}
+		} else {
+		}
 	};
+
+	const cancelSensoryData = () => {
+		setTempAccelEnable(isAccelerometerEnabled);
+		setTempGyroEnable(isGyroscopeEnabled);
+		setTempCameraEnable(isCameraEnabled);
+	}
 
 	// Toggle the dropdown menu
 	const toggleMenu = () => {
@@ -159,7 +202,7 @@ export default function GodotPage() {
 							<Text style={styles.menuItemText}>Output Settings</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.menuItem} onPress={() => {closeMenu(), setMobileSettingsModalVisible(true)}}>
+						<TouchableOpacity style={styles.menuItem} onPress={() => { closeMenu(), setMobileSettingsModalVisible(true) }}>
 							<Ionicons name="cog-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Mobile Settings</Text>
 						</TouchableOpacity>
@@ -197,10 +240,12 @@ export default function GodotPage() {
 								<Text style={styles.modalText}>X</Text>
 							</TouchableOpacity>
 							<Text style={styles.modalText}>Mobile Accelerator</Text>
-							<Switch value={tempAccelEnable} onValueChange={(value) => {setTempAccelEnable(value)}}></Switch>
+							<Switch value={tempAccelEnable} onValueChange={(value) => { setTempAccelEnable(value) }}></Switch>
 							<Text style={styles.modalText}>Mobile Gyroscope</Text>
-							<Switch value={tempGyroEnable} onValueChange={(value) => {setTempGyroEnable(value)}}></Switch>
-							<TouchableOpacity>
+							<Switch value={tempGyroEnable} onValueChange={(value) => { setTempGyroEnable(value) }}></Switch>
+							<Text style={styles.modalText}>Mobile Camera</Text>
+							<Switch value={tempCameraEnable} onValueChange={(value) => { setTempCameraEnable(value) }}></Switch>
+							<TouchableOpacity onPress={cancelSensoryData}>
 								<Text style={styles.modalText}>Cancel</Text>
 							</TouchableOpacity>
 							<TouchableOpacity onPress={updateSensoryData}>
@@ -312,8 +357,8 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 		backgroundColor: 'rgba(0,0,0,0.5)',
-		
- 	},
+
+	},
 	modalContainer: {
 		backgroundColor: '#1e1e1e',
 		borderRadius: 20,
