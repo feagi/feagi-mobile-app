@@ -227,6 +227,8 @@ export default function GodotPage() {
 					<Ionicons name="help-outline" size={24} color="white" />
 					<Text style={styles.menuItemText}>Help</Text>
 				</TouchableOpacity>
+				</ScrollView> {/* This closes the ScrollView */}
+
 			</Animated.View>
 
 			{/* close the menu when clicking outside */}
