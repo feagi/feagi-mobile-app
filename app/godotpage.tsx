@@ -19,6 +19,7 @@ export default function GodotPage() {
 	const [isAccelerometerEnabled, setIsAccelerometerEnabled] = useState(false);
 	const [isGyroscopeEnabled, setIsGyroscopeEnabled] = useState(false);
 	//camera
+	const cameraRef = useRef<Camera>(null);
 	const [isCameraEnabled, setIsCameraEnabled] = useState(false);
 	const [tempCameraEnable, setTempCameraEnable] = useState(false);
 	const [permission, requestPermission] = useCameraPermissions();
@@ -52,24 +53,24 @@ export default function GodotPage() {
 			// 	Accelerometer.setUpdateInterval(1000);
 			const sub = Accelerometer.addListener(data => {
 				sendData(JSON.stringify(data));
-			  });
-			  Accelerometer.setUpdateInterval(1000);
-			  return () => sub.remove(); // Proper cleanup
-			}
-			// } else if (tempAccelEnable && !hasAccelerometerPermission) {
-			// 	handleAccelPermission();
+			});
+			Accelerometer.setUpdateInterval(1000);
+			return () => sub.remove(); // Proper cleanup
+		}
+		// } else if (tempAccelEnable && !hasAccelerometerPermission) {
+		// 	handleAccelPermission();
 		//} //else {
-			// Accelerometer.removeAllListeners();
-			// console.log(Accelerometer);
-		
+		// Accelerometer.removeAllListeners();
+		// console.log(Accelerometer);
+
 		if (tempGyroEnable) {
 			const sub = Gyroscope.addListener(data => {
 				sendData(JSON.stringify(data));
-			  });
-			  Gyroscope.setUpdateInterval(1000);
-			  return () => sub.remove();
-		} 
-			// console.log(Gyroscope);
+			});
+			Gyroscope.setUpdateInterval(1000);
+			return () => sub.remove();
+		}
+		// console.log(Gyroscope);
 
 		if (tempCameraEnable) {
 			if (!permission?.granted) {
@@ -86,7 +87,7 @@ export default function GodotPage() {
 			}
 		} else {
 			stopCameraFeed();
-			
+
 		}
 	};
 
@@ -288,7 +289,7 @@ export default function GodotPage() {
 					onClose={() => setHelpModalVisible(false)} // Close the modal when clicked outside or the close button
 				/>
 
-				
+
 
 				{/* close the menu when clicking outside */}
 				{menuVisible && (
@@ -335,6 +336,17 @@ export default function GodotPage() {
 						>
 							<Ionicons name="menu" size={32} color="black" />
 						</TouchableOpacity>
+
+
+
+
+						{isCameraEnabled && permission?.granted && (
+							<Camera
+								ref={cameraRef}
+								style={styles.cameraPreview}
+								type={Camera.Constants.Type.back}
+							/>
+						)}
 
 						<WebView
 							//source={require("../assets/feagi/index.html")}
@@ -398,6 +410,16 @@ export default function GodotPage() {
 }
 
 const styles = StyleSheet.create({
+	cameraPreview: {
+		position: 'absolute',
+		width: 120,
+		height: 160,
+		right: 10,
+		top: 10,
+		zIndex: 100,
+		borderRadius: 8,
+		overflow: 'hidden'
+	  },//this is for camera
 	button: {
 		position: 'absolute', // Position the button absolutely
 		bottom: 20, // Distance from the bottom of the screen
