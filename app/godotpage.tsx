@@ -44,29 +44,33 @@ export default function GodotPage() {
 		setIsGyroscopeEnabled(tempGyroEnable);
 		setIsCameraEnabled(tempCameraEnable);
 		if (tempAccelEnable) {
-			if (!Accelerometer.hasListeners()) {
-				Accelerometer.addListener(data => {
-					console.log('Accelerometer data:', data);
-					sendData(JSON.stringify(data));
-				});
-				Accelerometer.setUpdateInterval(1000);
+			// if (!Accelerometer.hasListeners()) {
+			// 	Accelerometer.addListener(data => {
+			// 		console.log('Accelerometer data:', data);
+			// 		sendData(JSON.stringify(data));
+			// 	});
+			// 	Accelerometer.setUpdateInterval(1000);
+			const sub = Accelerometer.addListener(data => {
+				sendData(JSON.stringify(data));
+			  });
+			  Accelerometer.setUpdateInterval(1000);
+			  return () => sub.remove(); // Proper cleanup
 			}
 			// } else if (tempAccelEnable && !hasAccelerometerPermission) {
 			// 	handleAccelPermission();
-		} else {
-			Accelerometer.removeAllListeners();
-		}
+		//} //else {
+			// Accelerometer.removeAllListeners();
+			// console.log(Accelerometer);
+		
 		if (tempGyroEnable) {
-			if (!Gyroscope.hasListeners()) {
-				Gyroscope.addListener(data => {
-					console.log('Gyroscope data:', data);
-					sendData(JSON.stringify(data));
-				});
-				Gyroscope.setUpdateInterval(1000);
-			}
-		} else {
-			Gyroscope.removeAllListeners();
-		}
+			const sub = Gyroscope.addListener(data => {
+				sendData(JSON.stringify(data));
+			  });
+			  Gyroscope.setUpdateInterval(1000);
+			  return () => sub.remove();
+		} 
+			// console.log(Gyroscope);
+
 		if (tempCameraEnable) {
 			if (!permission?.granted) {
 				requestPermission().then(({ granted }) => {
