@@ -288,16 +288,7 @@ export default function GodotPage() {
 					onClose={() => setHelpModalVisible(false)} // Close the modal when clicked outside or the close button
 				/>
 
-				<ScrollView style={{ flex: 1 }}>
-					<View style={{ height: 600 }}>
-						{/* Hamburger Menu Button */}
-						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
-							<Ionicons name="help-outline" size={24} color="white" />
-							<Text style={styles.menuItemText}>Help</Text>
-						</TouchableOpacity>
-
-					</View>
-				</ScrollView>
+				
 
 				{/* close the menu when clicking outside */}
 				{menuVisible && (
