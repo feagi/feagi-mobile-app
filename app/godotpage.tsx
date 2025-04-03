@@ -34,7 +34,7 @@ export default function GodotPage() {
 	// 		setHasAccelerometerPermission(true);
 	// 	}
 	// }
-
+//
 	const updateSensoryData = () => {
 		setIsAccelerometerEnabled(tempAccelEnable);
 		setIsGyroscopeEnabled(tempGyroEnable);
