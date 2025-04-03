@@ -18,11 +18,14 @@ export default function GodotPage() {
 	const [mobileSettingsModalVisible, setMobileSettingsModalVisible] = useState(false);
 	const [isAccelerometerEnabled, setIsAccelerometerEnabled] = useState(false);
 	const [isGyroscopeEnabled, setIsGyroscopeEnabled] = useState(false);
+	//camera
 	const [isCameraEnabled, setIsCameraEnabled] = useState(false);
-	const [tempAccelEnable, setTempAccelEnable] = useState(false);
-	const [tempGyroEnable, setTempGyroEnable] = useState(false);
 	const [tempCameraEnable, setTempCameraEnable] = useState(false);
 	const [permission, requestPermission] = useCameraPermissions();
+
+	//other
+	const [tempAccelEnable, setTempAccelEnable] = useState(false);
+	const [tempGyroEnable, setTempGyroEnable] = useState(false);
 	// const [hasAccelerometerPermission, setHasAccelerometerPermission] = useState(false);
 	useEffect(() => {
 		initializeSocket();
@@ -66,14 +69,40 @@ export default function GodotPage() {
 		}
 		if (tempCameraEnable) {
 			if (!permission?.granted) {
-				requestPermission();
-				updateSensoryData();
+				requestPermission().then(({ granted }) => {
+					if (granted) {
+						startCameraFeed();
+					}
+				});
+				//updateSensoryData();
 			}
 			else {
 				console.log("Camera is activated");
+				startCameraFeed();
 			}
 		} else {
+			stopCameraFeed();
+			
 		}
+	};
+
+	//Ed added this
+	const startCameraFeed = () => {
+		setIsCameraEnabled(true);
+		sendData(JSON.stringify({
+			type: 'camera_control',
+			status: 'activated',
+			timestamp: Date.now()
+		}));
+	};
+
+	const stopCameraFeed = () => {
+		setIsCameraEnabled(false);
+		sendData(JSON.stringify({
+			type: 'camera_control',
+			status: 'deactivated',
+			timestamp: Date.now()
+		}));
 	};
 
 	const cancelSensoryData = () => {
