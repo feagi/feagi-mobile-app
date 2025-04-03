@@ -174,6 +174,9 @@ export default function GodotPage() {
 		let httpsLink = value;
 		let concatLink = httpsLink.slice(8);
 		let wssLink = value.replace('https', 'wss');
+
+
+
 		console.log("reg: " + httpsLink);
 		console.log("concat: " + concatLink);
 		console.log("wss: " + wssLink);
@@ -257,38 +260,38 @@ export default function GodotPage() {
 							<Text style={styles.menuItemText}>Connectivity</Text>
 						</TouchableOpacity>
 
-				<TouchableOpacity
-					style={styles.menuItem}
-					onPress={() => setHelpModalVisible(true)} // Show Help Modal
-				>
-					<Ionicons name="help-outline" size={24} color="white" />
-					<Text style={styles.menuItemText}>Help</Text>
-				</TouchableOpacity>
-				</ScrollView> 
+						<TouchableOpacity
+							style={styles.menuItem}
+							onPress={() => setHelpModalVisible(true)} // Show Help Modal
+						>
+							<Ionicons name="help-outline" size={24} color="white" />
+							<Text style={styles.menuItemText}>Help</Text>
+						</TouchableOpacity>
+					</ScrollView>
 
-			</Animated.View>
+				</Animated.View>
 
-			{/* close the menu when clicking outside */}
-			{menuVisible && (
-				<TouchableOpacity
-					style={styles.overlay}
-					activeOpacity={1}
-					onPress={closeMenu}
+				{/* close the menu when clicking outside */}
+				{menuVisible && (
+					<TouchableOpacity
+						style={styles.overlay}
+						activeOpacity={1}
+						onPress={closeMenu}
+					/>
+				)}
+				<HelpModal
+					visible={helpModalVisible}
+					onClose={() => setHelpModalVisible(false)} // Close the modal when clicked outside or the close button
 				/>
-			)}
-			<HelpModal
-				visible={helpModalVisible}
-				onClose={() => setHelpModalVisible(false)} // Close the modal when clicked outside or the close button
-			/>
 
-			<ScrollView style={{ flex: 1 }}>
-				<View style={{ height: 600 }}>
-					{/* Hamburger Menu Button */}
+				<ScrollView style={{ flex: 1 }}>
+					<View style={{ height: 600 }}>
+						{/* Hamburger Menu Button */}
 						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
 							<Ionicons name="help-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Help</Text>
 						</TouchableOpacity>
-					
+
 					</View>
 				</ScrollView>
 
@@ -356,6 +359,34 @@ export default function GodotPage() {
 							mediaPlaybackRequiresUserAction={false}
 							scalesPageToFit={true}
 							bounces={false}
+							injectedJavaScriptBeforeContentStart={`
+								// Completely disable Web Audio API
+								(function() {
+								  const noop = () => {};
+								  const mockAudioContext = {
+									createAnalyser: () => ({}),
+									createGain: () => ({}),
+									suspend: () => Promise.resolve(),
+									resume: () => Promise.resolve(),
+									close: noop,
+									state: 'closed',
+									audioWorklet: {
+									  addModule: () => Promise.resolve()
+									}
+								  };
+								  
+								  window.AudioContext = class {
+									constructor() { return mockAudioContext; }
+								  };
+								  window.webkitAudioContext = window.AudioContext;
+								  window.AudioWorkletNode = class {};
+								  window.AudioWorkletProcessor = class {};
+								  
+								  // Prevent FEAGI audio initialization
+								  window.FEAGI_AUDIO_DISABLED = true;
+								})();
+								true;
+							  `}
 						/>
 
 						<TouchableOpacity
