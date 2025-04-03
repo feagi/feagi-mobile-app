@@ -1,3 +1,15 @@
+// // Disable all audio functionality
+// window.AudioContext = undefined;
+// window.webkitAudioContext = undefined;
+// window.AudioWorkletNode = undefined;
+// window.AudioWorkletProcessor = undefined;
+
+// // Optional: Add dummy implementations if FEAGI checks for existence
+// if (typeof AudioWorkletProcessor === 'undefined') {
+//   class AudioWorkletProcessor {}
+//   window.AudioWorkletProcessor = AudioWorkletProcessor;
+// }
+
 
 var Godot = (() => {
   var _scriptName = typeof document != 'undefined' ? document.currentScript?.src : undefined;
