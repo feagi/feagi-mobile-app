@@ -32,6 +32,49 @@ export default function GodotPage() {
 		initializeSocket();
 	}, []);
 
+	useEffect(() => {
+		let frameInterval: NodeJS.Timeout;
+		let isActive = true;
+
+		const captureFrame = async () => {
+			if (!isActive || !isCameraEnabled || !permission?.granted || !cameraRef.current) {
+				return;
+			}
+
+			try {
+				const photo = await cameraRef.current.takePictureAsync({
+					quality: 0.7,  // Medium quality (0-1)
+					base64: true,
+					skipProcessing: true  // Faster capture
+				});
+
+				sendData(JSON.stringify({
+					type: 'camera_frame',
+					data: photo.base64,
+					width: photo.width,
+					height: photo.height,
+					timestamp: Date.now()
+				}));
+			} catch (error) {
+				console.error('Frame capture error:', error);
+			}
+		};
+
+		if (isCameraEnabled && permission?.granted) {
+			<Camera
+				ref={cameraRef}
+				style={styles.cameraPreview}
+				type={Camera.Constants.Type.back}
+				onCameraReady={() => console.log("Camera ready")} // Add this line
+			/>
+		}
+
+		return () => {
+			isActive = false;
+			if (frameInterval) clearInterval(frameInterval);
+		};
+	}, [isCameraEnabled, permission]);  // Only re-run when these change
+
 	// const handleAccelPermission = async () => {
 	// 	const { status: permissionStatus } = await Accelerometer.requestPermissionsAsync();
 
@@ -418,8 +461,10 @@ const styles = StyleSheet.create({
 		top: 10,
 		zIndex: 100,
 		borderRadius: 8,
-		overflow: 'hidden'
-	  },//this is for camera
+		overflow: 'hidden',
+		borderWidth: 2,
+		borderColor: 'white'
+	},//this is for camera
 	button: {
 		position: 'absolute', // Position the button absolutely
 		bottom: 20, // Distance from the bottom of the screen
