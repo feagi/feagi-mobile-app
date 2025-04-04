@@ -1,6 +1,7 @@
-import React from "react";
-import { Modal, View, Text, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Modal, View, Text, TouchableOpacity, ScrollView, Dimensions } from "react-native";
 import Markdown from "react-native-markdown-display";
+import { Ionicons } from '@expo/vector-icons';
 
 interface HelpModalProps {
     visible: boolean;
@@ -8,6 +9,28 @@ interface HelpModalProps {
 }
 
 const HelpModal: React.FC<HelpModalProps> = ({ visible, onClose }) => {
+    const [currentOrientation, setCurrentOrientation] = useState<'portrait' | 'landscape'>('portrait');
+
+    // Detect initial orientation
+    useEffect(() => {
+        const { width, height } = Dimensions.get('window');
+        const initialOrientation = width > height ? 'landscape' : 'portrait';
+        setCurrentOrientation(initialOrientation);
+
+        //event listener for orientation changes
+        const handleOrientationChange = ({ window }) => {
+            const { width, height } = window;
+            setCurrentOrientation(width > height ? 'landscape' : 'portrait');
+        };
+
+        const subscription = Dimensions.addEventListener('change', handleOrientationChange);
+
+        // Cleanup
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+
     const markdownContent = `
 # FEAGI Mobile App Help
 This is a Scrollable markdown container.
@@ -18,7 +41,7 @@ This is a Scrollable markdown container.
 - To be added :O
 
 ![Example Image](https://example.com/sample-image.png)
-  `;
+`;
 
     const markdownStyles = {
         text: {
@@ -27,16 +50,28 @@ This is a Scrollable markdown container.
     };
 
     return (
-        <Modal visible={visible} transparent animationType="slide">
+        <Modal
+            visible={visible}
+            transparent
+            animationType="slide"
+            supportedOrientations={['portrait', 'landscape']}
+            onOrientationChange={(orientation) => {
+                setCurrentOrientation(orientation);
+            }}
+        >
             <View style={styles.overlay}>
-                <View style={styles.modalContainer}>
+                <View style={currentOrientation === 'landscape' ? styles.modalContainerLandscape : styles.modalContainerPortrait}>
                     <View style={styles.header}>
                         <Text style={styles.title}>Help</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <Text style={styles.closeText}>✖</Text>
+                            <Ionicons name="close" size={24} color="#fff" />
                         </TouchableOpacity>
                     </View>
-                    <ScrollView style={styles.content}>
+                    <ScrollView style={
+                        currentOrientation === 'landscape'
+                            ? styles.contentLandscape
+                            : styles.contentPortrait
+                    }>
                         <Markdown style={markdownStyles}>{markdownContent}</Markdown>
                     </ScrollView>
                 </View>
@@ -52,20 +87,29 @@ const styles = {
         justifyContent: "center",
         alignItems: "center",
     },
-    modalContainer: {
+    modalContainerPortrait: {
         width: "80%",
-        backgroundColor: "#003366",
-        padding: 15,
+        backgroundColor: "#0A1A3A",
+        padding: 20,
         borderRadius: 10,
+        maxHeight: '80%',
+    },
+    modalContainerLandscape: {
+        width: "90%",
+        maxWidth: 700,
+        backgroundColor: "#0A1A3A",
+        padding: 20,
+        borderRadius: 10,
+        maxHeight: '80%',
     },
     header: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 10,
+        marginBottom: 15,
     },
     title: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: "bold",
         color: "white",
     },
@@ -76,8 +120,11 @@ const styles = {
         fontSize: 18,
         color: "white",
     },
-    content: {
-        maxHeight: 300,
+    contentPortrait: {
+        maxHeight: 400,
+    },
+    contentLandscape: {
+        maxHeight: 250,
     },
 };
 

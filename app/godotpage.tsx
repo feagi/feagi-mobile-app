@@ -10,6 +10,7 @@ import { Accelerometer, Gyroscope } from 'expo-sensors';
 import { Switch, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Camera, useCameraPermissions } from 'expo-camera';
 import { sendData, initializeSocket } from './websocket';
+import { Dimensions } from 'react-native';
 
 export default function GodotPage() {
 	const [godot, onGodotChange] = useState('');
@@ -26,6 +27,31 @@ export default function GodotPage() {
 	//other
 	const [tempAccelEnable, setTempAccelEnable] = useState(false);
 	const [tempGyroEnable, setTempGyroEnable] = useState(false);
+
+
+	const [currentOrientation, setCurrentOrientation] = useState('portrait');
+
+	useEffect(() => {
+		// Detect initial orientation
+		const { width, height } = Dimensions.get('window');
+		const initialOrientation = width > height ? 'landscape' : 'portrait';
+		setCurrentOrientation(initialOrientation);
+
+		// Listen for orientation changes
+		const handleOrientationChange = ({ window }) => {
+			const { width, height } = window;
+			setCurrentOrientation(width > height ? 'landscape' : 'portrait');
+		};
+
+		// Add event listener
+		const subscription = Dimensions.addEventListener('change', handleOrientationChange);
+
+		// Cleanup
+		return () => {
+			subscription.remove();
+		};
+	}, []);
+
 	// const [hasAccelerometerPermission, setHasAccelerometerPermission] = useState(false);
 	useEffect(() => {
 		initializeSocket();
@@ -52,24 +78,24 @@ export default function GodotPage() {
 			// 	Accelerometer.setUpdateInterval(1000);
 			const sub = Accelerometer.addListener(data => {
 				sendData(JSON.stringify(data));
-			  });
-			  Accelerometer.setUpdateInterval(1000);
-			  return () => sub.remove(); // Proper cleanup
-			}
-			// } else if (tempAccelEnable && !hasAccelerometerPermission) {
-			// 	handleAccelPermission();
+			});
+			Accelerometer.setUpdateInterval(1000);
+			return () => sub.remove(); // Proper cleanup
+		}
+		// } else if (tempAccelEnable && !hasAccelerometerPermission) {
+		// 	handleAccelPermission();
 		//} //else {
-			// Accelerometer.removeAllListeners();
-			// console.log(Accelerometer);
-		
+		// Accelerometer.removeAllListeners();
+		// console.log(Accelerometer);
+
 		if (tempGyroEnable) {
 			const sub = Gyroscope.addListener(data => {
 				sendData(JSON.stringify(data));
-			  });
-			  Gyroscope.setUpdateInterval(1000);
-			  return () => sub.remove();
-		} 
-			// console.log(Gyroscope);
+			});
+			Gyroscope.setUpdateInterval(1000);
+			return () => sub.remove();
+		}
+		// console.log(Gyroscope);
 
 		if (tempCameraEnable) {
 			if (!permission?.granted) {
@@ -86,7 +112,7 @@ export default function GodotPage() {
 			}
 		} else {
 			stopCameraFeed();
-			
+
 		}
 	};
 
@@ -288,7 +314,7 @@ export default function GodotPage() {
 					onClose={() => setHelpModalVisible(false)} // Close the modal when clicked outside or the close button
 				/>
 
-				
+
 
 				{/* close the menu when clicking outside */}
 				{menuVisible && (
@@ -302,26 +328,78 @@ export default function GodotPage() {
 				<Modal
 					animationType="slide"
 					transparent={true}
-					visible={mobileSettingsModalVisible}>
-
+					visible={mobileSettingsModalVisible}
+					onOrientationChange={(orientation) => {
+						setCurrentOrientation(orientation);
+					}}
+					supportedOrientations={['portrait', 'landscape']}
+				>
 					<View style={styles.modalOverlay}>
-						<View style={styles.modalContainer}>
-							<Text style={styles.modalTitle}>Mobile Settings</Text>
-							<TouchableOpacity onPress={() => setMobileSettingsModalVisible(false)}>
-								<Text style={styles.modalText}>X</Text>
-							</TouchableOpacity>
-							<Text style={styles.modalText}>Mobile Accelerator</Text>
-							<Switch value={tempAccelEnable} onValueChange={(value) => { setTempAccelEnable(value) }}></Switch>
-							<Text style={styles.modalText}>Mobile Gyroscope</Text>
-							<Switch value={tempGyroEnable} onValueChange={(value) => { setTempGyroEnable(value) }}></Switch>
-							<Text style={styles.modalText}>Mobile Camera</Text>
-							<Switch value={tempCameraEnable} onValueChange={(value) => { setTempCameraEnable(value) }}></Switch>
-							<TouchableOpacity onPress={cancelSensoryData}>
-								<Text style={styles.modalText}>Cancel</Text>
-							</TouchableOpacity>
-							<TouchableOpacity onPress={updateSensoryData}>
-								<Text style={styles.modalText}>Apply</Text>
-							</TouchableOpacity>
+						<View style={styles.fixedModalContainer}>
+							{/* Header section */}
+							<View style={styles.modalHeader}>
+								<Text style={styles.modalTitle}>Mobile Settings</Text>
+								<TouchableOpacity
+									style={styles.closeButton}
+									onPress={() => setMobileSettingsModalVisible(false)}>
+									<Ionicons name="close" size={24} color="#fff" />
+								</TouchableOpacity>
+							</View>
+
+							<View style={styles.divider} />
+
+							{/* Settings section */}
+							<View style={styles.settingsWrapper}>
+								<View style={styles.settingItem}>
+									<Text style={styles.settingLabel}>Mobile Camera</Text>
+									<Switch
+										value={tempCameraEnable}
+										onValueChange={(value) => setTempCameraEnable(value)}
+										trackColor={{ false: '#767577', true: '#81D4FA' }}
+										thumbColor={tempCameraEnable ? '#fff' : '#f4f3f4'}
+									/>
+								</View>
+
+								<View style={styles.settingItem}>
+									<Text style={styles.settingLabel}>Mobile Gyroscope</Text>
+									<Switch
+										value={tempGyroEnable}
+										onValueChange={(value) => setTempGyroEnable(value)}
+										trackColor={{ false: '#767577', true: '#81D4FA' }}
+										thumbColor={tempGyroEnable ? '#fff' : '#f4f3f4'}
+									/>
+								</View>
+
+								<View style={styles.settingItem}>
+									<Text style={styles.settingLabel}>Mobile Accelerator</Text>
+									<Switch
+										value={tempAccelEnable}
+										onValueChange={(value) => setTempAccelEnable(value)}
+										trackColor={{ false: '#767577', true: '#81D4FA' }}
+										thumbColor={tempAccelEnable ? '#fff' : '#f4f3f4'}
+									/>
+								</View>
+							</View>
+
+							{/* Button section */}
+							<View style={styles.fixedButtonRow}>
+								<TouchableOpacity
+									style={styles.cancelButton}
+									onPress={() => {
+										cancelSensoryData();
+										setMobileSettingsModalVisible(false);
+									}}>
+									<Text style={styles.buttonText}>Cancel</Text>
+								</TouchableOpacity>
+								<TouchableOpacity
+									style={styles.applyButton}
+									onPress={() => {
+										updateSensoryData();
+										setMobileSettingsModalVisible(false);
+									}}>
+									<Text style={styles.buttonText}>Apply</Text>
+								</TouchableOpacity>
+							</View>
 						</View>
 					</View>
 				</Modal>
@@ -406,16 +484,14 @@ const styles = StyleSheet.create({
 		padding: 10,
 		borderRadius: 5,
 	},
-	buttonText: {
-		color: '#FFFFFF', // Example text color
-		fontSize: 16,
-	},
+
 	menuButton: {
 		position: 'absolute',
 		top: 20,
 		left: 20,
 		zIndex: 1,
 	},
+
 	menuContainer: {
 		position: 'absolute',
 		top: 0,
@@ -426,6 +502,7 @@ const styles = StyleSheet.create({
 		paddingTop: 50,
 		zIndex: 2,
 	},
+
 	menuItem: {
 		flexDirection: 'row',
 		alignItems: 'center',
@@ -433,11 +510,13 @@ const styles = StyleSheet.create({
 		borderBottomWidth: 1,
 		borderBottomColor: '#555',
 	},
+
 	menuItemText: {
 		color: 'white',
 		fontSize: 18,
 		marginLeft: 10,
 	},
+
 	overlay: {
 		position: 'absolute',
 		top: 0,
@@ -447,10 +526,23 @@ const styles = StyleSheet.create({
 		backgroundColor: 'rgba(0, 0, 0, 0.5)',
 		zIndex: 1,
 	},
+
 	menuScrollContainer: {
 		flexGrow: 1,
 		paddingBottom: 20,
 	},
+
+	modalContainer: {
+		backgroundColor: '#1e1e1e',
+		borderRadius: 20,
+		width: '95%',
+		height: '80%',
+	},
+
+	modalText: {
+		color: 'white'
+	},
+
 	modalOverlay: {
 		flex: 1,
 		justifyContent: 'center',
@@ -458,21 +550,97 @@ const styles = StyleSheet.create({
 		backgroundColor: 'rgba(0,0,0,0.5)',
 
 	},
-	modalContainer: {
-		backgroundColor: '#1e1e1e',
+
+	fixedModalContainer: {
+		width: '85%',
+		backgroundColor: '#0A1A3A',
 		borderRadius: 20,
-		width: '95%',
-		height: '80%',
+		padding: 20,
+		height: 'auto',
+		minWidth: 250,
+		minHeight: 250,
+		maxWidth: 500,
+		maxHeight: 400,
 	},
+
+	modalHeader: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 5,
+	},
+
 	modalTitle: {
-		textAlign: 'center',
 		fontSize: 24,
 		fontWeight: 'bold',
 		color: '#fff',
-		padding: 10,
+	},
+
+	closeButton: {
+		padding: 5,
+	},
+
+	closeButtonText: {
+		fontSize: 20,
+		fontWeight: 'bold',
+		color: 'white',
+	},
+
+	divider: {
+		height: 1,
+		backgroundColor: '#555',
+		marginBottom: 15,
+		width: '100%',
+	},
+
+	settingsWrapper: {
+		marginBottom: 20,
+	},
+
+	settingItem: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		paddingVertical: 12,
+		marginBottom: 10,
+		borderBottomWidth: 1,
+		borderBottomColor: '#444',
+	},
+
+	settingLabel: {
+		fontSize: 16,
+		color: '#fff',
+		flex: 1,
+		marginRight: 10,
+	},
+
+	fixedButtonRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
 		marginTop: 10,
 	},
-	modalText: {
-		color: 'white'
+
+	cancelButton: {
+		backgroundColor: '#81D4FA',
+		padding: 15,
+		borderRadius: 10,
+		flex: 1,
+		marginRight: 10,
+		alignItems: 'center',
+	},
+
+	applyButton: {
+		backgroundColor: '#81D4FA',
+		padding: 15,
+		borderRadius: 10,
+		flex: 1,
+		marginLeft: 10,
+		alignItems: 'center',
+	},
+
+	buttonText: {
+		color: '#0A1A3A',
+		fontSize: 18,
+		fontWeight: 'bold',
 	},
 });
