@@ -11,6 +11,11 @@ import { Switch, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Camera } from 'expo-camera';
 import { sendData, initializeSocket } from './websocket';
 
+type CameraPermissionResponse = {
+	status: 'granted' | 'denied' | 'undetermined';
+	granted: boolean;
+  };
+
 export default function GodotPage() {
 	const [godot, onGodotChange] = useState('');
 	const [menuVisible, setMenuVisible] = useState(false); // state for hamburger menu drop down
@@ -22,7 +27,7 @@ export default function GodotPage() {
 	const cameraRef = useRef<Camera>(null);
 	const [isCameraEnabled, setIsCameraEnabled] = useState(false);
 	const [tempCameraEnable, setTempCameraEnable] = useState(false);
-	const [permission, requestPermission] = useCameraPermissions();
+	const [permission, setPermission] = useState<CameraPermissionResponse | null>(null);
 
 	//other
 	const [tempAccelEnable, setTempAccelEnable] = useState(false);
@@ -35,37 +40,37 @@ export default function GodotPage() {
 	useEffect(() => {
 		let frameInterval: NodeJS.Timeout;
 		let isActive = true;
-
+	  
 		const captureFrame = async () => {
-			if (!isActive || !isCameraEnabled || !permission?.granted || !cameraRef.current) return;
-
-			try {
-				const photo = await cameraRef.current.takePictureAsync({
-					quality: 0.7,
-					base64: true,
-					skipProcessing: true
-				});
-				sendData(JSON.stringify({
-					type: 'camera_frame',
-					data: photo.base64,
-					width: photo.width,
-					height: photo.height,
-					timestamp: Date.now()
-				}));
-			} catch (error) {
-				console.error('Frame capture error camera is brokey', error);
-			}
+		  if (!isActive || !isCameraEnabled || !permission?.granted || !cameraRef.current) return;
+	  
+		  try {
+			const photo = await cameraRef.current.takePictureAsync({
+			  quality: 0.7,
+			  base64: true,
+			  skipProcessing: true
+			});
+			sendData(JSON.stringify({
+			  type: 'camera_frame',
+			  data: photo.base64,
+			  width: photo.width,
+			  height: photo.height,
+			  timestamp: Date.now()
+			}));
+		  } catch (error) {
+			console.error('Frame capture error:', error);
+		  }
 		};
-
+	  
 		if (isCameraEnabled && permission?.granted) {
-			frameInterval = setInterval(captureFrame, 1000 / 15); // ~15 FPS
+		  frameInterval = setInterval(captureFrame, 1000/15); // ~15 FPS
 		}
-
+	  
 		return () => {
-			isActive = false;
-			if (frameInterval) clearInterval(frameInterval);
+		  isActive = false;
+		  if (frameInterval) clearInterval(frameInterval);
 		};
-	}, [isCameraEnabled, permission]);  // Only re-run when these change
+	  }, [isCameraEnabled, permission?.granted]);  // Only check granted status  // Only re-run when these change
 
 	// const handleAccelPermission = async () => {
 	// 	const { status: permissionStatus } = await Accelerometer.requestPermissionsAsync();
@@ -82,8 +87,10 @@ export default function GodotPage() {
 
 			// Handle camera separately with async/await
 			if (tempCameraEnable) {
-				const { granted } = await requestPermission();
-				if (granted) {
+				const { status } = await Camera.requestCameraPermissionsAsync();
+				setPermission({ status, granted: status === 'granted' });
+
+				if (status == "granted") {
 					setIsCameraEnabled(true);
 					startCameraFeed();
 				} else {
@@ -366,11 +373,17 @@ export default function GodotPage() {
 
 
 
-						{Camera.Constants && Camera.Constants.Type && Camera.Constants.Type.back && (
+						{isCameraEnabled && permission?.granted && Camera && Camera.Constants && (
 							<Camera
 								ref={cameraRef}
 								style={styles.cameraPreview}
 								type={Camera.Constants.Type.back}
+								onCameraReady={() => console.log("Camera ready")}
+								onMountError={(error) => {
+									console.error("Camera failed to mount:", error);
+									setIsCameraEnabled(false);
+									setTempCameraEnable(false);
+								}}
 							/>
 						)}
 
