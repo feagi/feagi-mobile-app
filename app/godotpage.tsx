@@ -8,7 +8,7 @@ import HelpModal from "./helpModal"; // Import the help
 
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import { Switch, GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Camera, useCameraPermissions } from 'expo-camera';
+import { Camera } from 'expo-camera';
 import { sendData, initializeSocket } from './websocket';
 
 export default function GodotPage() {
@@ -35,37 +35,37 @@ export default function GodotPage() {
 	useEffect(() => {
 		let frameInterval: NodeJS.Timeout;
 		let isActive = true;
-	  
+
 		const captureFrame = async () => {
-		  if (!isActive || !isCameraEnabled || !permission?.granted || !cameraRef.current) return;
-	  
-		  try {
-			const photo = await cameraRef.current.takePictureAsync({
-			  quality: 0.7,
-			  base64: true,
-			  skipProcessing: true
-			});
-			sendData(JSON.stringify({
-			  type: 'camera_frame',
-			  data: photo.base64,
-			  width: photo.width,
-			  height: photo.height,
-			  timestamp: Date.now()
-			}));
-		  } catch (error) {
-			console.error('Frame capture error camera is brokey', error);
-		  }
+			if (!isActive || !isCameraEnabled || !permission?.granted || !cameraRef.current) return;
+
+			try {
+				const photo = await cameraRef.current.takePictureAsync({
+					quality: 0.7,
+					base64: true,
+					skipProcessing: true
+				});
+				sendData(JSON.stringify({
+					type: 'camera_frame',
+					data: photo.base64,
+					width: photo.width,
+					height: photo.height,
+					timestamp: Date.now()
+				}));
+			} catch (error) {
+				console.error('Frame capture error camera is brokey', error);
+			}
 		};
-	  
+
 		if (isCameraEnabled && permission?.granted) {
-		  frameInterval = setInterval(captureFrame, 1000/15); // ~15 FPS
+			frameInterval = setInterval(captureFrame, 1000 / 15); // ~15 FPS
 		}
-	  
+
 		return () => {
-		  isActive = false;
-		  if (frameInterval) clearInterval(frameInterval);
+			isActive = false;
+			if (frameInterval) clearInterval(frameInterval);
 		};
-	  }, [isCameraEnabled, permission]);  // Only re-run when these change
+	}, [isCameraEnabled, permission]);  // Only re-run when these change
 
 	// const handleAccelPermission = async () => {
 	// 	const { status: permissionStatus } = await Accelerometer.requestPermissionsAsync();
@@ -77,45 +77,45 @@ export default function GodotPage() {
 
 	const updateSensoryData = async () => {
 		try {
-		  setIsAccelerometerEnabled(tempAccelEnable);
-		  setIsGyroscopeEnabled(tempGyroEnable);
-		  
-		  // Handle camera separately with async/await
-		  if (tempCameraEnable) {
-			const { granted } = await requestPermission();
-			if (granted) {
-			  setIsCameraEnabled(true);
-			  startCameraFeed();
+			setIsAccelerometerEnabled(tempAccelEnable);
+			setIsGyroscopeEnabled(tempGyroEnable);
+
+			// Handle camera separately with async/await
+			if (tempCameraEnable) {
+				const { granted } = await requestPermission();
+				if (granted) {
+					setIsCameraEnabled(true);
+					startCameraFeed();
+				} else {
+					setTempCameraEnable(false); // Reset toggle if denied
+					Alert.alert("Permission Denied", "Camera access is required");
+				}
 			} else {
-			  setTempCameraEnable(false); // Reset toggle if denied
-			  Alert.alert("Permission Denied", "Camera access is required");
+				stopCameraFeed();
+				setIsCameraEnabled(false);
 			}
-		  } else {
-			stopCameraFeed();
-			setIsCameraEnabled(false);
-		  }
-	  
-		  // Sensor handlers remain the same
-		  if (tempAccelEnable) {
-			const sub = Accelerometer.addListener(data => {
-			  sendData(JSON.stringify(data));
-			});
-			Accelerometer.setUpdateInterval(1000);
-			return () => sub.remove();
-		  }
-	  
-		  if (tempGyroEnable) {
-			const sub = Gyroscope.addListener(data => {
-			  sendData(JSON.stringify(data));
-			});
-			Gyroscope.setUpdateInterval(1000);
-			return () => sub.remove();
-		  }
+
+			// Sensor handlers remain the same
+			if (tempAccelEnable) {
+				const sub = Accelerometer.addListener(data => {
+					sendData(JSON.stringify(data));
+				});
+				Accelerometer.setUpdateInterval(1000);
+				return () => sub.remove();
+			}
+
+			if (tempGyroEnable) {
+				const sub = Gyroscope.addListener(data => {
+					sendData(JSON.stringify(data));
+				});
+				Gyroscope.setUpdateInterval(1000);
+				return () => sub.remove();
+			}
 		} catch (error) {
-		  console.error("Sensor activation error:", error);
-		  Alert.alert("Error", "Failed to initialize sensors");
+			console.error("Sensor activation error:", error);
+			Alert.alert("Error", "Failed to initialize sensors");
 		}
-	  };
+	};
 
 	//Ed added this
 	const startCameraFeed = () => {
@@ -366,7 +366,7 @@ export default function GodotPage() {
 
 
 
-						{isCameraEnabled && permission?.granted && (
+						{Camera.Constants && Camera.Constants.Type && Camera.Constants.Type.back && (
 							<Camera
 								ref={cameraRef}
 								style={styles.cameraPreview}
