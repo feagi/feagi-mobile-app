@@ -115,11 +115,7 @@ const CorticalPage = () => {
                 }
 
             }
-
-
         }
-
-
         if (dimensions[2] === 1) {
             // Toggle controls - x value determines number of toggles
             const newControl: Control = {
@@ -159,21 +155,37 @@ const CorticalPage = () => {
             const endpoint = `${api}/v1/agent/sustained_stimulation`;
 
             // Create the payload according to the API documentation
+            //var placeholderPayload = "";
+            var placeholderPayload = (`{"stimulation_payload": {"${control.corticalId}": [`);
+            for(let i = 0; i<control.slideCount; i++){
+				if(i === (control.slideCount-1)){
+					placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}]`);
+				}
+				else{
+					placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}], `);
+				}
+				//placeholderPayload += ('[' + i + + ', 0, 0, ' + + '],');
+				//placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}], `);
+				//console.log("placeholder" + control.valueSlider[i]);
+			}
+			placeholderPayload += (`]}}`);
+			console.log("placeholder " + placeholderPayload);
+			//placeholderPayload = placeholderPayload.toString();
             const payload = {
                 "stimulation_payload": {
                     [control.corticalId]: [[index, 0, 0, value]]
                 }
             };
 
-            console.log('Sending slider data:', JSON.stringify(payload));
-
+            console.log('Sending slider data:', JSON.stringify(placeholderPayload));
+			console.log(control);
             // Send the POST request
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(payload)
+                body: placeholderPayload
             });
 
             console.log('Slider data sent:', response.status);
@@ -197,11 +209,13 @@ const CorticalPage = () => {
             // Create the payload according to the API documentation
             const payload = {
                 "stimulation_payload": {
+
                     [control.corticalId]: [[index, 0, 0, value]]
                 }
             };
 
             console.log('Sending toggle data:', JSON.stringify(payload));
+            console.log(control);
 
             // Send the POST request
             const response = await fetch(endpoint, {
@@ -350,11 +364,6 @@ const CorticalPage = () => {
                 //console.log("parsedVal: " + parsedVal);
                 //setIsLoading(false);
 
-
-
-                //return;
-
-                //here
             }
 
             let apiVal = (api + "/v1/cortical_area/cortical_area/geometry");
@@ -371,8 +380,7 @@ const CorticalPage = () => {
                 setAvailableCorticalAreas(json);
 
 
-				console.log("available cortAReas " + await JSON.stringify(json));
-				console.log("available cortAReas " + await JSON.stringify(availableCorticalAreas));
+
 
                 // Clear existing controls
                 setControls([]);
@@ -380,13 +388,13 @@ const CorticalPage = () => {
 
 
                 // Here it's mapping the keys to the values found in the API
-                //Object.keys(json).forEach(function (key) {
 
-                //count(0);
+				/*
+
                 var theKey = await AsyncStorage.getAllKeys()
                 console.log("kets are: " + theKey);
 
-                //setCount(0);
+
 
                 for (let key of Object.keys(json)) {
 
@@ -437,8 +445,10 @@ const CorticalPage = () => {
 
                 }
 
+				*/
 
-                setIsLoading(false);
+
+                //setIsLoading(false);
             }
             catch (error) {
                 console.log("Error loading cortical areas:", error);
@@ -448,51 +458,86 @@ const CorticalPage = () => {
 
 
         };
-
-
-
-        const runBoth = async () => {
-
-
-
+        const holderFunc = async () => {
+			//not sure if i need this
             await loadControls();
-            await setMappedAreas(await getAvailableAreas());
-            //
-
-
         }
-
-		const setDefault = async () => {
-
-
-            return;
-
-
-
-        }
-
-
-        runBoth();
+        holderFunc();
 
     }, [api]);
 
 
     useEffect(() => {
-        const removeKey = async () => {
-            if (deleteKey === 0) {
-                return
-            }
-            else {
+        const cortCheck = async () =>{
 
-                await AsyncStorage.removeItem(deleteKey);
-                setMappedAreas(await getAvailableAreas());
-            }
+	        if (Object.keys(availableCorticalAreas).length === 0) {
+				console.log("not happening")
+				return;
+			}
+			else{
+				console.log("useEffect" + JSON.stringify(availableCorticalAreas));
+				var theKey = await AsyncStorage.getAllKeys()
+                console.log("kets are: " + theKey);
 
-        }
+                //setCount(0);
 
-        removeKey();
+                for (let key of Object.keys(availableCorticalAreas)) {
 
-    }, [deleteKey]);
+                    // Only auto-add areas with y=1
+                    if (availableCorticalAreas[key].cortical_dimensions[1] === 1) {
+                        console.log("count = " + count);
+                        console.log("wait", availableCorticalAreas[key].cortical_name);
+                        const deviceName = availableCorticalAreas[key].cortical_name;
+                        console.log("corticalName is " + deviceName);
+                        const dimensions = availableCorticalAreas[key].cortical_dimensions;
+
+                        // Add controls here
+
+                        let stringVar = JSON.stringify('{key: ' + key + ', cortical_name: ' + deviceName + ', cortical_dimensions: [' + dimensions + ']}')
+                        //await AsyncStorage.setItem(("cortical"+count), stringVar);
+
+                        //const firstVal = await AsyncStorage.getItem("cortical0");
+                        const testString = '{"key":"___pwr", "cortical_name":"Brain_Power", "cortical_dimensions":[1,1,1]}'
+
+
+                        let sample = '{"key":"' + key + '", "cortical_name":"' + deviceName + '","cortical_dimensions":[' + dimensions + ']}';
+                        let newSample = sample.toString();
+                        const keyVal = ("cortical" + count).toString();
+                        //console.log("adding " + newSample + " and: " + keyVal);
+
+                        console.log("keyvalue " + keyVal + " " + newSample)
+
+
+                        await AsyncStorage.setItem(keyVal, newSample);
+
+
+                        console.log("sample is " + newSample);
+                        const objectToAdd = JSON.parse(newSample.toString());
+                        console.log("area: ", objectToAdd.key);
+                        //
+                        //await addControl(objectToAdd.cortical_name, objectToAdd.cortical_dimensions, objectToAdd.key);
+                        setAddedCorticalIds(prev => [...prev, (objectToAdd.key)]);
+                        console.log("Look here Adding control for " + deviceName + " with dimensions " + dimensions);
+
+
+
+                        count++;
+
+
+
+                        //also add them to the async storage
+                    }
+
+                }
+				await setMappedAreas(await getAvailableAreas());
+				setIsLoading(false);
+
+
+			}
+		}
+		cortCheck();
+
+    }, [availableCorticalAreas]);
 
     const TestFetch = () => {
         return new Promise(async (resolve, reject) => {
@@ -666,7 +711,7 @@ const CorticalPage = () => {
                                         style={styles.slider}
                                         minimumValue={0}
                                         maximumValue={100}
-                                        step={1}
+                                        step={.001}
                                         value={value}
 
                                         onSlidingComplete={(newValue) => {
