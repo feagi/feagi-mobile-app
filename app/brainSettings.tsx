@@ -75,7 +75,7 @@ const BrainSettingsPage = () => {
                 console.error(`Error fetching refresh rate: ${refreshStatusCode}`, errorText);
             }
 
-            // Fetch plasticity queue depth - using query parameter approach
+            // Fetch plasticity queue depth
             const plasticityUrl = `${api}/v1/neuroplasticity/plasticity_queue_depth`;
             console.log(`Fetching plasticity queue from: ${plasticityUrl}`);
             const plasticityResponse = await fetch(plasticityUrl);
