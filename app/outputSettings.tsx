@@ -40,14 +40,14 @@ const OutputSettingsPage = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1e1e1e',
+        backgroundColor: '#0A1A3A',
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#2e2e2e',
+        backgroundColor: '#0A1A3A',
     },
     title: {
         fontSize: 24,
@@ -71,14 +71,14 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     cancelButton: {
-        backgroundColor: '#484a6e',
+        backgroundColor: '#81D4FB',
         padding: 15,
         borderRadius: 10,
         margin: 20,
         alignItems: 'center',
     },
     cancelButtonText: {
-        color: '#fff',
+        color: '#0A1A3A',
         fontSize: 18,
         fontWeight: 'bold',
     }
