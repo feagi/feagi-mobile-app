@@ -107,74 +107,47 @@ export default function GodotPage() {
 	// }
 
 	const updateSensoryData = async () => {
-		setIsAccelerometerEnabled(tempAccelEnable);
-		setIsGyroscopeEnabled(tempGyroEnable);
-		setIsCameraEnabled(tempCameraEnable);
+		// Handle sensors first
 		if (tempAccelEnable) {
-			// if (!Accelerometer.hasListeners()) {
-			// 	Accelerometer.addListener(data => {
-			// 		console.log('Accelerometer data:', data);
-			// 		sendData(JSON.stringify(data));
-			// 	});
-			// 	Accelerometer.setUpdateInterval(1000);
 			const sub = Accelerometer.addListener(data => {
 				sendData(JSON.stringify(data));
 			});
 			Accelerometer.setUpdateInterval(1000);
-			return () => sub.remove(); // Proper cleanup
+			// Store the subscription for cleanup
 		}
-		// } else if (tempAccelEnable && !hasAccelerometerPermission) {
-		// 	handleAccelPermission();
-		//} //else {
-		// Accelerometer.removeAllListeners();
-		// console.log(Accelerometer);
-
+	
 		if (tempGyroEnable) {
 			const sub = Gyroscope.addListener(data => {
 				sendData(JSON.stringify(data));
 			});
 			Gyroscope.setUpdateInterval(1000);
-			return () => sub.remove();
+			// Store the subscription for cleanup
 		}
-		// console.log(Gyroscope);
-
-			// Handle camera separately with async/await
-			if (tempCameraEnable) {
+	
+		// Handle camera separately
+		if (tempCameraEnable) {
+			try {
 				const { status } = await Camera.requestCameraPermissionsAsync();
 				setPermission({ status, granted: status === 'granted' });
-
-				if (status == "granted") {
-					setIsCameraEnabled(true);
+	
+				if (status === "granted") {
 					startCameraFeed();
 				} else {
-					setTempCameraEnable(false); // Reset toggle if denied
+					setTempCameraEnable(false);
 					Alert.alert("Permission Denied", "Camera access is required");
 				}
-			} else {
-				stopCameraFeed();
-				setIsCameraEnabled(false);
+			} catch (error) {
+				console.error("Camera permission error:", error);
+				setTempCameraEnable(false);
 			}
-
-			// Sensor handlers remain the same
-			if (tempAccelEnable) {
-				const sub = Accelerometer.addListener(data => {
-					sendData(JSON.stringify(data));
-				});
-				Accelerometer.setUpdateInterval(1000);
-				return () => sub.remove();
-			}
-
-			if (tempGyroEnable) {
-				const sub = Gyroscope.addListener(data => {
-					sendData(JSON.stringify(data));
-				});
-				Gyroscope.setUpdateInterval(1000);
-				return () => sub.remove();
-			}
-		 else {
+		} else {
 			stopCameraFeed();
-
 		}
+	
+		// Update all enabled states at the end
+		setIsAccelerometerEnabled(tempAccelEnable);
+		setIsGyroscopeEnabled(tempGyroEnable);
+		setIsCameraEnabled(tempCameraEnable && !!permission?.granted);
 	};
 
 	//Ed added this
