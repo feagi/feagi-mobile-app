@@ -12,7 +12,7 @@ export default function RootLayout() {
       <Stack.Screen name="outputSettings" options={{ title: "output settings", headerShown: false }} />
       <Stack.Screen name="inputSettings" options={{ title: "input settings", headerShown: false }} />
       <Stack.Screen name="brainSettings" options={{ title: "brain settings", headerShown: false }} />
-
+      <Stack.Screen name="connectivitySettings" options={{ title: "connectivity settings", headerShown: false }} />
     </Stack>
   );
 }

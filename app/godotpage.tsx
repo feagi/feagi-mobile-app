@@ -285,7 +285,10 @@ export default function GodotPage() {
 							<Text style={styles.menuItemText}>Mobile Settings</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<TouchableOpacity style={styles.menuItem} onPress={() => {
+							router.push('/connectivitySettings');
+							closeMenu();
+						}}>
 							<Ionicons name="wifi-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Connectivity</Text>
 						</TouchableOpacity>
