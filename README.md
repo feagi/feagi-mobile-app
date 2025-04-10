@@ -40,8 +40,8 @@ Reference the UI/UX PDF in the aforementioned Drive folder for details.
 - [ ] "Plug In" screen
 - [ ] Network Configuration screen
 - [ ] BM (Brain Monitor) screen
-- [ ] Hamburger menu at top of app
-- [ ] Settings dropdowns from hamburger
+- [x] Hamburger menu at top of app
+- [x] Settings dropdowns from hamburger
 - [ ] Responsive: works on different viewports, and in both portrait & landscape mode
 
 ### End Users/Use Cases
@@ -52,22 +52,22 @@ Reference the UI/UX PDF in the aforementioned Drive folder for details.
 
 ### Functionality
 
-- [ ] Display a FEAGI instance running in the playground or NRS (should support both)
+- [x] Display a FEAGI instance running in the playground or NRS (should support both)
 - [ ] Get and transmit phone sensor data to FEAGI instance: webcam, gyroscope, accelerometer
-- [ ] Allow user to edit settings and transmit their changes to backend
+- [x] Allow user to edit settings and transmit their changes to backend
 
 ### Nice to Have (not required)
 
-- [ ] Functionally identical apps for both iPhone & Android
+- [x] Functionally identical apps for both iPhone & Android
 - [ ] Light/dark mode
 
 ## 🏁 Milestones
 
-- [ ] Get the initial codebase up and running on a local simulator or phone
-- [ ] Add all views from the mockup
-- [ ] Get the BV running a remote FEAGI instance
-- [ ] Add the hamburger menu and settings dropdowns
-- [ ] Communicate settings changes to the backend
+- [x] Get the initial codebase up and running on a local simulator or phone
+- [x] Add all views from the mockup
+- [x] Get the BV running a remote FEAGI instance
+- [x] Add the hamburger menu and settings dropdowns
+- [x] Communicate settings changes to the backend
 - [ ] Communicate phone sensor data to the backend
 
 ## ✅ Deliverables
