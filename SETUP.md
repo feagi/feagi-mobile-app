@@ -64,21 +64,21 @@ npm run reset-project
 - See feagi.tsx for a test implementation. (You can comment in the remote source if you just want to see it working first.)
 - FEAGI should be integrated using the files in assets/feagi. Your entry point will be index.html, as shown in feagi.tsx. Currently, this is not working properly -- the other assets in the directory are not being properly found after index.html loads. Do NOT solve the problem by altering any files in feagi/. If you think that is unavoidable, please reach out to Nadji first.
 
-### Using the "Magic Link"
+### Using the "API Key"
 
-- The UI/UX PDF talks about connecting with the "magic link." This link is how you will know what FEAGI URL to plug in to the Webview component.
+- The key is how you will know what FEAGI URL to plug in to the Webview component.
 
-- To get a link, log into the NRS website. Create/start an experiment. When you reach the Brain Visualizer, click the Embodiment dropdown. Then click the Magic Link button.
+- To get the key, log into the NRS website. Create/start an experiment. When you reach the Brain Visualizer, click the Embodiment dropdown. Then click the API Key button.
 
-- This is the link the user will need to provide for connectivity. Once they provide it, make a fetch request to that link. (Test this by pasting it into your browser.) The response will contain the info needed to add the required parameters to the FEAGI Webview URL. (The response will always contain their current session if it exists, so they should not need to redo adding their magic link.)
+- This is the key the user will need to provide for connectivity. NEED TO UPDATE: Once they provide it, make a fetch request to that link. (Test this by pasting it into your browser.) The response will contain the info needed to add the required parameters to the FEAGI Webview URL. (The response will always contain their current session if it exists, so they should not need to redo adding their magic link.)
 
-- Until you get the functionality to accept their link and dynamically change the Webview FEAGI URL, you can just hardcode its values in the webview params in (tabs)/feagi.tsx.
-
-## Hot Tip ❗
+## Tips
 
 Always assume there is a way to do what you want. React Native is used by millions of developers worldwide, and for apps as major as Discord.
 
 For example, you can simulate pinching in the iOS simulator with option + drag. There are libraries for all sorts of functionalities. Before you give up on something or recreate the wheel, Google, talk to chatbots, and see if what you want already exists.
+
+- Open the developer menu in an emulator app with control + d
 
 ## Troubleshooting
 
