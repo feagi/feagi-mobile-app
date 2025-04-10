@@ -106,7 +106,7 @@ export default function GodotPage() {
 	// 	}
 	// }
 
-	const updateSensoryData = () => {
+	const updateSensoryData = async () => {
 		setIsAccelerometerEnabled(tempAccelEnable);
 		setIsGyroscopeEnabled(tempGyroEnable);
 		setIsCameraEnabled(tempCameraEnable);
