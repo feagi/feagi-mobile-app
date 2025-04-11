@@ -157,6 +157,7 @@ export default function GodotPage() {
 			}
 		} else {
 			stopCameraFeed();
+			console.log("stopcamerafeed called");
 		}
 
 		// Update all enabled states at the end
