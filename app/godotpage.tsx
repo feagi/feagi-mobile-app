@@ -163,7 +163,6 @@ export default function GodotPage() {
 		// Update all enabled states at the end
 		setIsAccelerometerEnabled(tempAccelEnable);
 		setIsGyroscopeEnabled(tempGyroEnable);
-		setIsCameraEnabled(tempCameraEnable && !!permission?.granted);
 	};
 
 	//Ed added this
