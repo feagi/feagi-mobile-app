@@ -468,20 +468,22 @@ export default function GodotPage() {
 
 
 
-						{isCameraEnabled && permission?.granted && (
+						{isCameraEnabled && permission?.granted && (() => {
 							console.log("got to the isCameraEnabled && permission?.granted && part");
-							<Camera
-								ref={cameraRef}
-								style={styles.cameraPreview}
-								type={CameraType.back} 
-								onCameraReady={() => console.log("Camera ready")}
-								onMountError={(error) => {
-									console.error("Camera failed to mount:", error);
-									setIsCameraEnabled(false);
-									setTempCameraEnable(false);
-								}}
-							/>
-						)}
+							return (
+								<Camera
+									ref={cameraRef}
+									style={styles.cameraPreview}
+									type={CameraType.back}
+									onCameraReady={() => console.log("Camera ready")}
+									onMountError={(error) => {
+										console.error("Camera failed to mount:", error);
+										setIsCameraEnabled(false);
+										setTempCameraEnable(false);
+									}}
+								/>
+							);
+						})()}
 
 						<WebView
 							//source={require("../assets/feagi/index.html")}
