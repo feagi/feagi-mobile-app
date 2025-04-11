@@ -140,22 +140,21 @@ export default function GodotPage() {
 		// Handle camera separately
 		if (tempCameraEnable) {
 			try {
-				const { status } = await Camera.requestCameraPermissionsAsync();
-				console.log("permissions status:" + status);
-				setPermission({ status, granted: status === 'granted' });
-
-				if (status === "granted") {
-					startCameraFeed();
-					console.log("status is granted");
-				} else {
-					setTempCameraEnable(false);
-					Alert.alert("Permission Denied", "Camera access is required");
-				}
+			  const { status } = await Camera.requestCameraPermissionsAsync();
+			  console.log("Camera permission status:", status);
+			  setPermission({ status, granted: status === 'granted' });
+			  
+			  // Only set camera enabled if permission was just granted
+			  if (status === "granted") {
+				setIsCameraEnabled(true);  // Directly set to true
+				startCameraFeed();
+				console.log("status is set to granted");
+			  }
 			} catch (error) {
-				console.error("Camera permission error:", error);
-				setTempCameraEnable(false);
+			  console.error("Camera permission error:", error);
+			  setTempCameraEnable(false);
 			}
-		} else {
+		  } else {
 			stopCameraFeed();
 			console.log("stopcamerafeed called");
 		}
