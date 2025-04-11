@@ -11,6 +11,8 @@ import { Switch, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Camera, useCameraPermissions } from 'expo-camera';
 import { sendData, initializeSocket } from './websocket';
 import { Dimensions } from 'react-native';
+import capabilities from '../constants/capabilities.js';
+
 
 export default function GodotPage() {
 	const [godot, onGodotChange] = useState('');
@@ -19,6 +21,10 @@ export default function GodotPage() {
 	const [mobileSettingsModalVisible, setMobileSettingsModalVisible] = useState(false);
 	const [isAccelerometerEnabled, setIsAccelerometerEnabled] = useState(false);
 	const [isGyroscopeEnabled, setIsGyroscopeEnabled] = useState(false);
+	let minAccel = { x: Infinity, y: Infinity, z: Infinity };
+	let maxAccel = { x: -Infinity, y: -Infinity, z: -Infinity };
+	let minGyro = { x: Infinity, y: Infinity, z: Infinity };
+	let maxGyro = { x: -Infinity, y: -Infinity, z: -Infinity };
 	//camera
 	const [isCameraEnabled, setIsCameraEnabled] = useState(false);
 	const [tempCameraEnable, setTempCameraEnable] = useState(false);
@@ -55,7 +61,15 @@ export default function GodotPage() {
 	// const [hasAccelerometerPermission, setHasAccelerometerPermission] = useState(false);
 	useEffect(() => {
 		initializeSocket();
+		console.log('initializing socket');
 	}, []);
+
+	// useEffect(() => {
+	// 	if (isAccelerometerEnabled || isGyroscopeEnabled || isCameraEnabled) {
+	// 		console.log(JSON.stringify(capabilities));
+	// 		sendData(JSON.stringify(capabilities));
+	// 	}
+	// }, [isAccelerometerEnabled, isGyroscopeEnabled, isCameraEnabled]);
 
 	// const handleAccelPermission = async () => {
 	// 	const { status: permissionStatus } = await Accelerometer.requestPermissionsAsync();
@@ -69,18 +83,29 @@ export default function GodotPage() {
 		setIsAccelerometerEnabled(tempAccelEnable);
 		setIsGyroscopeEnabled(tempGyroEnable);
 		setIsCameraEnabled(tempCameraEnable);
-		if (tempAccelEnable) {
-			// if (!Accelerometer.hasListeners()) {
-			// 	Accelerometer.addListener(data => {
-			// 		console.log('Accelerometer data:', data);
-			// 		sendData(JSON.stringify(data));
-			// 	});
-			// 	Accelerometer.setUpdateInterval(1000);
+		if (tempAccelEnable && !Accelerometer.hasListeners()) {
 			const sub = Accelerometer.addListener(data => {
-				sendData(JSON.stringify(data));
+				minAccel.x = Math.min(minAccel.x, data.x);
+				minAccel.y = Math.min(minAccel.y, data.y);
+				minAccel.z = Math.min(minAccel.z, data.z);
+
+				maxAccel.x = Math.max(maxAccel.x, data.x);
+				maxAccel.y = Math.max(maxAccel.y, data.y);
+				maxAccel.z = Math.max(maxAccel.z, data.z);
+
+				capabilities.capabilities.input.accelerometer[0].min_value = [minAccel.x,minAccel.y,minAccel.z,];
+				capabilities.capabilities.input.accelerometer[0].max_value = [maxAccel.x,maxAccel.y,maxAccel.z,];
+
+				capabilities.capabilities.input.accelerometer[0].disabled = false;
+				// console.log(JSON.stringify(capabilities));
+				sendData(JSON.stringify(capabilities));
 			});
 			Accelerometer.setUpdateInterval(1000);
-			return () => sub.remove(); // Proper cleanup
+			// return () => sub.remove(); // Proper cleanup
+		}
+		if (!tempAccelEnable && Accelerometer.hasListeners()) {
+			Accelerometer.removeAllListeners();
+			capabilities.capabilities.input.accelerometer[0].disabled = true;
 		}
 		// } else if (tempAccelEnable && !hasAccelerometerPermission) {
 		// 	handleAccelPermission();
@@ -88,12 +113,29 @@ export default function GodotPage() {
 		// Accelerometer.removeAllListeners();
 		// console.log(Accelerometer);
 
-		if (tempGyroEnable) {
+		if (tempGyroEnable && !Gyroscope.hasListeners()) {
 			const sub = Gyroscope.addListener(data => {
-				sendData(JSON.stringify(data));
+				minGyro.x = Math.min(minGyro.x, data.x);
+				minGyro.y = Math.min(minGyro.y, data.y);
+				minGyro.z = Math.min(minGyro.z, data.z);
+			
+				maxGyro.x = Math.max(maxGyro.x, data.x);
+				maxGyro.y = Math.max(maxGyro.y, data.y);
+				maxGyro.z = Math.max(maxGyro.z, data.z);
+			
+				capabilities.capabilities.input.gyro[0].min_value = [minGyro.x,minGyro.y,minGyro.z,];
+				capabilities.capabilities.input.gyro[0].max_value = [maxGyro.x,maxGyro.y,maxGyro.z,];
+
+				capabilities.capabilities.input.gyro[0].disabled = false;
+				// console.log(JSON.stringify(capabilities));
+				sendData(JSON.stringify(capabilities));
 			});
 			Gyroscope.setUpdateInterval(1000);
-			return () => sub.remove();
+			// return () => sub.remove();
+		}
+		if (!tempGyroEnable && Gyroscope.hasListeners()) {
+			Gyroscope.removeAllListeners();
+			capabilities.capabilities.input.gyro[0].disabled = true;
 		}
 		// console.log(Gyroscope);
 
@@ -114,6 +156,8 @@ export default function GodotPage() {
 			stopCameraFeed();
 
 		}
+
+
 	};
 
 	//Ed added this
@@ -390,7 +434,7 @@ export default function GodotPage() {
 									style={styles.cancelButton}
 									onPress={() => {
 										cancelSensoryData();
-										setMobileSettingsModalVisible(false);
+										// setMobileSettingsModalVisible(false);
 									}}>
 									<Text style={styles.buttonText}>Cancel</Text>
 								</TouchableOpacity>
@@ -398,7 +442,7 @@ export default function GodotPage() {
 									style={styles.applyButton}
 									onPress={() => {
 										updateSensoryData();
-										setMobileSettingsModalVisible(false);
+										// setMobileSettingsModalVisible(false);
 									}}>
 									<Text style={styles.buttonText}>Apply</Text>
 								</TouchableOpacity>
