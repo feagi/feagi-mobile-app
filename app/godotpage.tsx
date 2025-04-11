@@ -146,7 +146,7 @@ export default function GodotPage() {
 
 				if (status === "granted") {
 					startCameraFeed();
-					console.log("camera is working");
+					console.log("status is granted");
 				} else {
 					setTempCameraEnable(false);
 					Alert.alert("Permission Denied", "Camera access is required");
