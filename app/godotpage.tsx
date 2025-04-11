@@ -151,7 +151,6 @@ export default function GodotPage() {
 			  // Only set camera enabled if permission was just granted
 			  if (status === "granted") {
 				setIsCameraEnabled(true);  // Directly set to true
-				startCameraFeed();
 				console.log("status is set to granted");
 			  }
 			} catch (error) {
@@ -173,7 +172,6 @@ export default function GodotPage() {
 		console.log("called startcamerafeed");
 
 
-		// setIsCameraEnabled(true);
 		sendData(JSON.stringify({
 			type: 'camera_control',
 			status: 'activated',
@@ -183,6 +181,7 @@ export default function GodotPage() {
 
 	const stopCameraFeed = () => {
 		setIsCameraEnabled(false);
+		setIsCameraMounted(false); 
 		sendData(JSON.stringify({
 			type: 'camera_control',
 			status: 'deactivated',
@@ -482,6 +481,7 @@ export default function GodotPage() {
 									onCameraReady={() => 
 										{console.log("Camera ready");
 										setIsCameraMounted(true);
+										startCameraFeed();
 										}
 									}
 
