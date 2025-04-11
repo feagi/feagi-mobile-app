@@ -32,6 +32,9 @@ export default function GodotPage() {
 
 	const [lastFrame, setLastFrame] = useState<string | null>(null);
 
+	const [isCameraMounted, setIsCameraMounted] = useState(false);
+
+
 
 	//other
 	const [tempAccelEnable, setTempAccelEnable] = useState(false);
@@ -72,7 +75,7 @@ export default function GodotPage() {
 
 		console.log('isactive'+isActive+ "iscameraenabled"+isCameraEnabled+"permission granted"+permission?.granted+"cameraref"+cameraRef.current)
 		const captureFrame = async () => {
-			if (!isActive || !isCameraEnabled || !permission?.granted || !cameraRef.current) return;
+			if (!isCameraEnabled || !permission?.granted || !isCameraMounted) {return;}
 
 			try {
 				const photo = await cameraRef.current.takePictureAsync({
@@ -110,7 +113,7 @@ export default function GodotPage() {
 			isActive = false;
 			if (frameInterval) clearInterval(frameInterval);
 		};
-	}, [isCameraEnabled, permission?.granted]);  // Only check granted status  // Only re-run when these change
+	}, [isCameraEnabled, permission?.granted, isCameraMounted]); // Add isCameraMounted
 
 	// const handleAccelPermission = async () => {
 	// 	const { status: permissionStatus } = await Accelerometer.requestPermissionsAsync();
@@ -120,7 +123,7 @@ export default function GodotPage() {
 	// 	}
 	// }
 
-	const updateSensoryData = async () => {
+	const updateSensoryData = async () => { //called when button apply is pressed
 		// Handle sensors first
 		if (tempAccelEnable) {
 			const sub = Accelerometer.addListener(data => {
@@ -168,7 +171,9 @@ export default function GodotPage() {
 	//Ed added this
 	const startCameraFeed = () => {
 		console.log("called startcamerafeed");
-		setIsCameraEnabled(true);
+
+
+		// setIsCameraEnabled(true);
 		sendData(JSON.stringify({
 			type: 'camera_control',
 			status: 'activated',
@@ -474,7 +479,12 @@ export default function GodotPage() {
 									ref={cameraRef}
 									style={styles.cameraPreview}
 									type={CameraType.back}
-									onCameraReady={() => console.log("Camera ready")}
+									onCameraReady={() => 
+										{console.log("Camera ready");
+										setIsCameraMounted(true);
+										}
+									}
+
 									onMountError={(error) => {
 										console.error("Camera failed to mount:", error);
 										setIsCameraEnabled(false);
