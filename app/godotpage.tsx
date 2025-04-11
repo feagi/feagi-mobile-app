@@ -95,6 +95,8 @@ export default function GodotPage() {
 
 				capabilities.capabilities.input.accelerometer[0].min_value = [minAccel.x,minAccel.y,minAccel.z,];
 				capabilities.capabilities.input.accelerometer[0].max_value = [maxAccel.x,maxAccel.y,maxAccel.z,];
+
+				capabilities.capabilities.input.accelerometer[0].disabled = false;
 				// console.log(JSON.stringify(capabilities));
 				sendData(JSON.stringify(capabilities));
 			});
@@ -103,6 +105,7 @@ export default function GodotPage() {
 		}
 		if (!tempAccelEnable && Accelerometer.hasListeners()) {
 			Accelerometer.removeAllListeners();
+			capabilities.capabilities.input.accelerometer[0].disabled = true;
 		}
 		// } else if (tempAccelEnable && !hasAccelerometerPermission) {
 		// 	handleAccelPermission();
@@ -122,6 +125,8 @@ export default function GodotPage() {
 			
 				capabilities.capabilities.input.gyro[0].min_value = [minGyro.x,minGyro.y,minGyro.z,];
 				capabilities.capabilities.input.gyro[0].max_value = [maxGyro.x,maxGyro.y,maxGyro.z,];
+
+				capabilities.capabilities.input.gyro[0].disabled = false;
 				// console.log(JSON.stringify(capabilities));
 				sendData(JSON.stringify(capabilities));
 			});
@@ -130,6 +135,7 @@ export default function GodotPage() {
 		}
 		if (!tempGyroEnable && Gyroscope.hasListeners()) {
 			Gyroscope.removeAllListeners();
+			capabilities.capabilities.input.gyro[0].disabled = true;
 		}
 		// console.log(Gyroscope);
 
