@@ -421,6 +421,26 @@ const CorticalPage = () => {
                     }
 
                 }
+
+				let prom = await TestFetch();
+                for (let item of prom) {
+					let trueKey = item[0].toString();
+					console.log("here?");
+					if(trueKey.substring(0, 5) === "saved"){
+						var asyncString = await AsyncStorage.getItem(trueKey);
+						var JSONobj = JSON.parse(asyncString);
+						console.log(JSON.stringify(JSONobj));
+						await addControl(
+                        JSONobj.cortical_name,
+                        JSONobj.cortical_dimensions,
+                        JSONobj.key,
+                    );
+
+					}
+
+				}
+
+
 				await setMappedAreas(await getAvailableAreas());
 				setIsLoading(false);
 
@@ -602,6 +622,9 @@ const CorticalPage = () => {
                             // Render multiple sliders if needed
                             control.valueSlider.map((value, index) => (
                                 <View key={`slider-${control.id}-${index}`}>
+                                    <Text style={{color: 'white', fontSize: 20}}>
+                                        {index}
+                                    </Text>
                                     <Slider
                                         style={styles.slider}
                                         minimumValue={0}
@@ -669,7 +692,7 @@ const CorticalPage = () => {
                             control.valueSwitch.map((switchState, index) => (
                                 <View key={`toggle-${control.id}-${index}`} style={styles.switchView} >
                                     <Text style={styles.switchText} >
-                                        {switchState ? '1' : '0'}
+                                        {index}
                                     </Text>
                                     < View style={styles.switch} >
                                         <Switch
