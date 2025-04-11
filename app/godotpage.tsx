@@ -468,6 +468,7 @@ export default function GodotPage() {
 
 
 						{isCameraEnabled && permission?.granted && (
+							console.log("got to the isCameraEnabled && permission?.granted && part");
 							<Camera
 								ref={cameraRef}
 								style={styles.cameraPreview}
