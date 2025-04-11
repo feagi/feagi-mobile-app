@@ -15,7 +15,7 @@ import { Dimensions } from 'react-native';
 type CameraPermissionResponse = {
 	status: 'granted' | 'denied' | 'undetermined';
 	granted: boolean;
-  };
+};
 
 export default function GodotPage() {
 	const [godot, onGodotChange] = useState('');
@@ -29,6 +29,9 @@ export default function GodotPage() {
 	const [isCameraEnabled, setIsCameraEnabled] = useState(false);
 	const [tempCameraEnable, setTempCameraEnable] = useState(false);
 	const [permission, setPermission] = useState<CameraPermissionResponse | null>(null);
+
+	const [lastFrame, setLastFrame] = useState<string | null>(null);
+
 
 	//other
 	const [tempAccelEnable, setTempAccelEnable] = useState(false);
@@ -66,37 +69,47 @@ export default function GodotPage() {
 	useEffect(() => {
 		let frameInterval: NodeJS.Timeout;
 		let isActive = true;
-	  
+
 		const captureFrame = async () => {
-		  if (!isActive || !isCameraEnabled || !permission?.granted || !cameraRef.current) return;
-	  
-		  try {
-			const photo = await cameraRef.current.takePictureAsync({
-			  quality: 0.7,
-			  base64: true,
-			  skipProcessing: true
-			});
-			sendData(JSON.stringify({
-			  type: 'camera_frame',
-			  data: photo.base64,
-			  width: photo.width,
-			  height: photo.height,
-			  timestamp: Date.now()
-			}));
-		  } catch (error) {
-			console.error('Frame capture error:', error);
-		  }
+			if (!isActive || !isCameraEnabled || !permission?.granted || !cameraRef.current) return;
+
+			try {
+				const photo = await cameraRef.current.takePictureAsync({
+					quality: 0.7,
+					base64: true,
+					skipProcessing: true
+				});
+				sendData(JSON.stringify({
+					type: 'camera_frame',
+					data: photo.base64,
+					width: photo.width,
+					height: photo.height,
+					timestamp: Date.now()
+
+
+				}));
+
+				setLastFrame(`data:image/jpeg;base64,${photo.base64}`);
+				console.log('Camera frame captured:', {
+					dimensions: `${photo.width}x${photo.height}`,
+					size: `${Math.round(photo.base64.length / 1024)} KB`,
+					timestamp: new Date().toISOString()
+				});
+
+			} catch (error) {
+				console.error('Frame capture error:', error);
+			}
 		};
-	  
+
 		if (isCameraEnabled && permission?.granted) {
-		  frameInterval = setInterval(captureFrame, 1000/15); // ~15 FPS
+			frameInterval = setInterval(captureFrame, 1000 / 15); // ~15 FPS
 		}
-	  
+
 		return () => {
-		  isActive = false;
-		  if (frameInterval) clearInterval(frameInterval);
+			isActive = false;
+			if (frameInterval) clearInterval(frameInterval);
 		};
-	  }, [isCameraEnabled, permission?.granted]);  // Only check granted status  // Only re-run when these change
+	}, [isCameraEnabled, permission?.granted]);  // Only check granted status  // Only re-run when these change
 
 	// const handleAccelPermission = async () => {
 	// 	const { status: permissionStatus } = await Accelerometer.requestPermissionsAsync();
@@ -115,7 +128,7 @@ export default function GodotPage() {
 			Accelerometer.setUpdateInterval(1000);
 			// Store the subscription for cleanup
 		}
-	
+
 		if (tempGyroEnable) {
 			const sub = Gyroscope.addListener(data => {
 				sendData(JSON.stringify(data));
@@ -123,13 +136,13 @@ export default function GodotPage() {
 			Gyroscope.setUpdateInterval(1000);
 			// Store the subscription for cleanup
 		}
-	
+
 		// Handle camera separately
 		if (tempCameraEnable) {
 			try {
 				const { status } = await Camera.requestCameraPermissionsAsync();
 				setPermission({ status, granted: status === 'granted' });
-	
+
 				if (status === "granted") {
 					startCameraFeed();
 				} else {
@@ -143,7 +156,7 @@ export default function GodotPage() {
 		} else {
 			stopCameraFeed();
 		}
-	
+
 		// Update all enabled states at the end
 		setIsAccelerometerEnabled(tempAccelEnable);
 		setIsGyroscopeEnabled(tempGyroEnable);
@@ -512,6 +525,18 @@ export default function GodotPage() {
 								true;
 							  `}
 						/>
+						{lastFrame && (
+							<View style={styles.framePreviewContainer}>
+								<Image
+									source={{ uri: lastFrame }}
+									style={styles.framePreview}
+									resizeMode="contain"
+								/>
+								<Text style={styles.frameDebugText}>
+									Last frame: {new Date().toLocaleTimeString()}
+								</Text>
+							</View>
+						)}
 
 						<TouchableOpacity
 							style={[styles.button, { margin: 50 }]}
@@ -706,4 +731,27 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		fontWeight: 'bold',
 	},
+	framePreviewContainer: {
+		position: 'absolute',
+		bottom: 250,
+		right: 20,
+		width: 150,
+		height: 200,
+		backgroundColor: 'black',
+		borderRadius: 8,
+		zIndex: 200,
+		borderWidth: 2,
+		borderColor: 'white',
+	  },
+	  framePreview: {
+		width: '100%',
+		height: '100%',
+	  },
+	  frameDebugText: {
+		position: 'absolute',
+		bottom: -25,
+		color: 'white',
+		fontSize: 12,
+		backgroundColor: 'rgba(0,0,0,0.5)',
+	  },
 });
