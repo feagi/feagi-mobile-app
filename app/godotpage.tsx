@@ -4,10 +4,13 @@ import WebView from "react-native-webview";
 import React, { useEffect, useRef, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import HelpModal from "./helpModal"; // Import the help
+
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import { Switch, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Camera, useCameraPermissions } from 'expo-camera';
 import { sendData, initializeSocket } from './websocket';
+import { Dimensions } from 'react-native';
 
 export default function GodotPage() {
 	const [godot, onGodotChange] = useState('');
@@ -16,14 +19,41 @@ export default function GodotPage() {
 	const [mobileSettingsModalVisible, setMobileSettingsModalVisible] = useState(false);
 	const [isAccelerometerEnabled, setIsAccelerometerEnabled] = useState(false);
 	const [isGyroscopeEnabled, setIsGyroscopeEnabled] = useState(false);
+	//camera
 	const [isCameraEnabled, setIsCameraEnabled] = useState(false);
-	const [tempAccelEnable, setTempAccelEnable] = useState(false);
-	const [tempGyroEnable, setTempGyroEnable] = useState(false);
 	const [tempCameraEnable, setTempCameraEnable] = useState(false);
 	const [permission, requestPermission] = useCameraPermissions();
-	// const [hasAccelerometerPermission, setHasAccelerometerPermission] = useState(false);
 
-	useEffect (() => {
+	//other
+	const [tempAccelEnable, setTempAccelEnable] = useState(false);
+	const [tempGyroEnable, setTempGyroEnable] = useState(false);
+
+
+	const [currentOrientation, setCurrentOrientation] = useState('portrait');
+
+	useEffect(() => {
+		// Detect initial orientation
+		const { width, height } = Dimensions.get('window');
+		const initialOrientation = width > height ? 'landscape' : 'portrait';
+		setCurrentOrientation(initialOrientation);
+
+		// Listen for orientation changes
+		const handleOrientationChange = ({ window }) => {
+			const { width, height } = window;
+			setCurrentOrientation(width > height ? 'landscape' : 'portrait');
+		};
+
+		// Add event listener
+		const subscription = Dimensions.addEventListener('change', handleOrientationChange);
+
+		// Cleanup
+		return () => {
+			subscription.remove();
+		};
+	}, []);
+
+	// const [hasAccelerometerPermission, setHasAccelerometerPermission] = useState(false);
+	useEffect(() => {
 		initializeSocket();
 	}, []);
 
@@ -40,39 +70,69 @@ export default function GodotPage() {
 		setIsGyroscopeEnabled(tempGyroEnable);
 		setIsCameraEnabled(tempCameraEnable);
 		if (tempAccelEnable) {
-			if (!Accelerometer.hasListeners()) {
-				Accelerometer.addListener(data => {
-					console.log('Accelerometer data:', data);
-					sendData(JSON.stringify(data));
-				});
-				Accelerometer.setUpdateInterval(1000);
-			}
+			// if (!Accelerometer.hasListeners()) {
+			// 	Accelerometer.addListener(data => {
+			// 		console.log('Accelerometer data:', data);
+			// 		sendData(JSON.stringify(data));
+			// 	});
+			// 	Accelerometer.setUpdateInterval(1000);
+			const sub = Accelerometer.addListener(data => {
+				sendData(JSON.stringify(data));
+			});
+			Accelerometer.setUpdateInterval(1000);
+			return () => sub.remove(); // Proper cleanup
+		}
 		// } else if (tempAccelEnable && !hasAccelerometerPermission) {
 		// 	handleAccelPermission();
-		} else {
-			Accelerometer.removeAllListeners();
-		}
+		//} //else {
+		// Accelerometer.removeAllListeners();
+		// console.log(Accelerometer);
+
 		if (tempGyroEnable) {
-			if (!Gyroscope.hasListeners()) {
-				Gyroscope.addListener(data => {
-					console.log('Gyroscope data:', data);
-					sendData(JSON.stringify(data));
-				});
-				Gyroscope.setUpdateInterval(1000);
-			}
-		} else {
-			Gyroscope.removeAllListeners();
+			const sub = Gyroscope.addListener(data => {
+				sendData(JSON.stringify(data));
+			});
+			Gyroscope.setUpdateInterval(1000);
+			return () => sub.remove();
 		}
+		// console.log(Gyroscope);
+
 		if (tempCameraEnable) {
 			if (!permission?.granted) {
-				requestPermission();
-				updateSensoryData();
+				requestPermission().then(({ granted }) => {
+					if (granted) {
+						startCameraFeed();
+					}
+				});
+				//updateSensoryData();
 			}
 			else {
 				console.log("Camera is activated");
+				startCameraFeed();
 			}
 		} else {
+			stopCameraFeed();
+
 		}
+	};
+
+	//Ed added this
+	const startCameraFeed = () => {
+		setIsCameraEnabled(true);
+		sendData(JSON.stringify({
+			type: 'camera_control',
+			status: 'activated',
+			timestamp: Date.now()
+		}));
+	};
+
+	const stopCameraFeed = () => {
+		setIsCameraEnabled(false);
+		sendData(JSON.stringify({
+			type: 'camera_control',
+			status: 'deactivated',
+			timestamp: Date.now()
+		}));
 	};
 
 	const cancelSensoryData = () => {
@@ -80,6 +140,9 @@ export default function GodotPage() {
 		setTempGyroEnable(isGyroscopeEnabled);
 		setTempCameraEnable(isCameraEnabled);
 	}
+
+	const [helpModalVisible, setHelpModalVisible] = useState(false); // State for Help Modal
+
 
 	// Toggle the dropdown menu
 	const toggleMenu = () => {
@@ -134,13 +197,16 @@ export default function GodotPage() {
 		const value = await AsyncStorage.getItem("user");
 
 		//AsyncStorage.getAllKeys((err, keys) => {
-			//AsyncStorage.multiGet(keys, (err, stores) => {
-				//stores.map((result, i, store) => {
-					// get at each store's key/value so you can work with it
+		//AsyncStorage.multiGet(keys, (err, stores) => {
+		//stores.map((result, i, store) => {
+		// get at each store's key/value so you can work with it
 
 		let httpsLink = value;
 		let concatLink = httpsLink.slice(8);
 		let wssLink = value.replace('https', 'wss');
+
+
+
 		console.log("reg: " + httpsLink);
 		console.log("concat: " + concatLink);
 		console.log("wss: " + wssLink);
@@ -190,17 +256,26 @@ export default function GodotPage() {
 							<Text style={styles.menuItemText}>Cortical Controls</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<TouchableOpacity style={styles.menuItem} onPress={() => {
+							router.push('/brainSettings');
+							closeMenu();
+						}}>
 							<Ionicons name="bulb-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Brain Settings</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<TouchableOpacity style={styles.menuItem} onPress={() => {
+							router.push('/inputSettings');
+							closeMenu();
+						}}>
 							<Ionicons name="enter-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Input Settings</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<TouchableOpacity style={styles.menuItem} onPress={() => {
+							router.push('/outputSettings');
+							closeMenu();
+						}}>
 							<Ionicons name="log-out-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Output Settings</Text>
 						</TouchableOpacity>
@@ -210,17 +285,39 @@ export default function GodotPage() {
 							<Text style={styles.menuItemText}>Mobile Settings</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<TouchableOpacity style={styles.menuItem} onPress={() => {
+							router.push('/connectivitySettings');
+							closeMenu();
+						}}>
 							<Ionicons name="wifi-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Connectivity</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<TouchableOpacity
+							style={styles.menuItem}
+							onPress={() => setHelpModalVisible(true)} // Show Help Modal
+						>
 							<Ionicons name="help-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Help</Text>
 						</TouchableOpacity>
 					</ScrollView>
+
 				</Animated.View>
+
+				{/* close the menu when clicking outside */}
+				{menuVisible && (
+					<TouchableOpacity
+						style={styles.overlay}
+						activeOpacity={1}
+						onPress={closeMenu}
+					/>
+				)}
+				<HelpModal
+					visible={helpModalVisible}
+					onClose={() => setHelpModalVisible(false)} // Close the modal when clicked outside or the close button
+				/>
+
+
 
 				{/* close the menu when clicking outside */}
 				{menuVisible && (
@@ -234,26 +331,78 @@ export default function GodotPage() {
 				<Modal
 					animationType="slide"
 					transparent={true}
-					visible={mobileSettingsModalVisible}>
-
+					visible={mobileSettingsModalVisible}
+					onOrientationChange={(orientation) => {
+						setCurrentOrientation(orientation);
+					}}
+					supportedOrientations={['portrait', 'landscape']}
+				>
 					<View style={styles.modalOverlay}>
-						<View style={styles.modalContainer}>
-							<Text style={styles.modalTitle}>Mobile Settings</Text>
-							<TouchableOpacity onPress={() => setMobileSettingsModalVisible(false)}>
-								<Text style={styles.modalText}>X</Text>
-							</TouchableOpacity>
-							<Text style={styles.modalText}>Mobile Accelerator</Text>
-							<Switch value={tempAccelEnable} onValueChange={(value) => { setTempAccelEnable(value) }}></Switch>
-							<Text style={styles.modalText}>Mobile Gyroscope</Text>
-							<Switch value={tempGyroEnable} onValueChange={(value) => { setTempGyroEnable(value) }}></Switch>
-							<Text style={styles.modalText}>Mobile Camera</Text>
-							<Switch value={tempCameraEnable} onValueChange={(value) => { setTempCameraEnable(value) }}></Switch>
-							<TouchableOpacity onPress={cancelSensoryData}>
-								<Text style={styles.modalText}>Cancel</Text>
-							</TouchableOpacity>
-							<TouchableOpacity onPress={updateSensoryData}>
-								<Text style={styles.modalText}>Apply</Text>
-							</TouchableOpacity>
+						<View style={styles.fixedModalContainer}>
+							{/* Header section */}
+							<View style={styles.modalHeader}>
+								<Text style={styles.modalTitle}>Mobile Settings</Text>
+								<TouchableOpacity
+									style={styles.closeButton}
+									onPress={() => setMobileSettingsModalVisible(false)}>
+									<Ionicons name="close" size={24} color="#fff" />
+								</TouchableOpacity>
+							</View>
+
+							<View style={styles.divider} />
+
+							{/* Settings section */}
+							<View style={styles.settingsWrapper}>
+								<View style={styles.settingItem}>
+									<Text style={styles.settingLabel}>Mobile Camera</Text>
+									<Switch
+										value={tempCameraEnable}
+										onValueChange={(value) => setTempCameraEnable(value)}
+										trackColor={{ false: '#767577', true: '#81D4FA' }}
+										thumbColor={tempCameraEnable ? '#fff' : '#f4f3f4'}
+									/>
+								</View>
+
+								<View style={styles.settingItem}>
+									<Text style={styles.settingLabel}>Mobile Gyroscope</Text>
+									<Switch
+										value={tempGyroEnable}
+										onValueChange={(value) => setTempGyroEnable(value)}
+										trackColor={{ false: '#767577', true: '#81D4FA' }}
+										thumbColor={tempGyroEnable ? '#fff' : '#f4f3f4'}
+									/>
+								</View>
+
+								<View style={styles.settingItem}>
+									<Text style={styles.settingLabel}>Mobile Accelerator</Text>
+									<Switch
+										value={tempAccelEnable}
+										onValueChange={(value) => setTempAccelEnable(value)}
+										trackColor={{ false: '#767577', true: '#81D4FA' }}
+										thumbColor={tempAccelEnable ? '#fff' : '#f4f3f4'}
+									/>
+								</View>
+							</View>
+
+							{/* Button section */}
+							<View style={styles.fixedButtonRow}>
+								<TouchableOpacity
+									style={styles.cancelButton}
+									onPress={() => {
+										cancelSensoryData();
+										setMobileSettingsModalVisible(false);
+									}}>
+									<Text style={styles.buttonText}>Cancel</Text>
+								</TouchableOpacity>
+								<TouchableOpacity
+									style={styles.applyButton}
+									onPress={() => {
+										updateSensoryData();
+										setMobileSettingsModalVisible(false);
+									}}>
+									<Text style={styles.buttonText}>Apply</Text>
+								</TouchableOpacity>
+							</View>
 						</View>
 					</View>
 				</Modal>
@@ -286,6 +435,34 @@ export default function GodotPage() {
 							mediaPlaybackRequiresUserAction={false}
 							scalesPageToFit={true}
 							bounces={false}
+							injectedJavaScriptBeforeContentStart={`
+								// Completely disable Web Audio API
+								(function() {
+								  const noop = () => {};
+								  const mockAudioContext = {
+									createAnalyser: () => ({}),
+									createGain: () => ({}),
+									suspend: () => Promise.resolve(),
+									resume: () => Promise.resolve(),
+									close: noop,
+									state: 'closed',
+									audioWorklet: {
+									  addModule: () => Promise.resolve()
+									}
+								  };
+								  
+								  window.AudioContext = class {
+									constructor() { return mockAudioContext; }
+								  };
+								  window.webkitAudioContext = window.AudioContext;
+								  window.AudioWorkletNode = class {};
+								  window.AudioWorkletProcessor = class {};
+								  
+								  // Prevent FEAGI audio initialization
+								  window.FEAGI_AUDIO_DISABLED = true;
+								})();
+								true;
+							  `}
 						/>
 
 						<TouchableOpacity
@@ -310,16 +487,14 @@ const styles = StyleSheet.create({
 		padding: 10,
 		borderRadius: 5,
 	},
-	buttonText: {
-		color: '#FFFFFF', // Example text color
-		fontSize: 16,
-	},
+
 	menuButton: {
 		position: 'absolute',
 		top: 20,
 		left: 20,
 		zIndex: 1,
 	},
+
 	menuContainer: {
 		position: 'absolute',
 		top: 0,
@@ -330,6 +505,7 @@ const styles = StyleSheet.create({
 		paddingTop: 50,
 		zIndex: 2,
 	},
+
 	menuItem: {
 		flexDirection: 'row',
 		alignItems: 'center',
@@ -337,11 +513,13 @@ const styles = StyleSheet.create({
 		borderBottomWidth: 1,
 		borderBottomColor: '#555',
 	},
+
 	menuItemText: {
 		color: 'white',
 		fontSize: 18,
 		marginLeft: 10,
 	},
+
 	overlay: {
 		position: 'absolute',
 		top: 0,
@@ -351,10 +529,23 @@ const styles = StyleSheet.create({
 		backgroundColor: 'rgba(0, 0, 0, 0.5)',
 		zIndex: 1,
 	},
+
 	menuScrollContainer: {
 		flexGrow: 1,
 		paddingBottom: 20,
 	},
+
+	modalContainer: {
+		backgroundColor: '#1e1e1e',
+		borderRadius: 20,
+		width: '95%',
+		height: '80%',
+	},
+
+	modalText: {
+		color: 'white'
+	},
+
 	modalOverlay: {
 		flex: 1,
 		justifyContent: 'center',
@@ -362,21 +553,97 @@ const styles = StyleSheet.create({
 		backgroundColor: 'rgba(0,0,0,0.5)',
 
 	},
-	modalContainer: {
-		backgroundColor: '#1e1e1e',
+
+	fixedModalContainer: {
+		width: '85%',
+		backgroundColor: '#0A1A3A',
 		borderRadius: 20,
-		width: '95%',
-		height: '80%',
+		padding: 20,
+		height: 'auto',
+		minWidth: 250,
+		minHeight: 250,
+		maxWidth: 500,
+		maxHeight: 400,
 	},
+
+	modalHeader: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 5,
+	},
+
 	modalTitle: {
-		textAlign: 'center',
 		fontSize: 24,
 		fontWeight: 'bold',
 		color: '#fff',
-		padding: 10,
+	},
+
+	closeButton: {
+		padding: 5,
+	},
+
+	closeButtonText: {
+		fontSize: 20,
+		fontWeight: 'bold',
+		color: 'white',
+	},
+
+	divider: {
+		height: 1,
+		backgroundColor: '#555',
+		marginBottom: 15,
+		width: '100%',
+	},
+
+	settingsWrapper: {
+		marginBottom: 20,
+	},
+
+	settingItem: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		paddingVertical: 12,
+		marginBottom: 10,
+		borderBottomWidth: 1,
+		borderBottomColor: '#444',
+	},
+
+	settingLabel: {
+		fontSize: 16,
+		color: '#fff',
+		flex: 1,
+		marginRight: 10,
+	},
+
+	fixedButtonRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
 		marginTop: 10,
 	},
-	modalText: {
-		color: 'white'
+
+	cancelButton: {
+		backgroundColor: '#81D4FA',
+		padding: 15,
+		borderRadius: 10,
+		flex: 1,
+		marginRight: 10,
+		alignItems: 'center',
+	},
+
+	applyButton: {
+		backgroundColor: '#81D4FA',
+		padding: 15,
+		borderRadius: 10,
+		flex: 1,
+		marginLeft: 10,
+		alignItems: 'center',
+	},
+
+	buttonText: {
+		color: '#0A1A3A',
+		fontSize: 18,
+		fontWeight: 'bold',
 	},
 });

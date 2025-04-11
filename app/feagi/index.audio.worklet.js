@@ -1,0 +1,2 @@
+// Empty stub
+export default {};
