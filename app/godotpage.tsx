@@ -145,7 +145,7 @@ export default function GodotPage() {
 		if (tempCameraEnable) {
 			try {
 			  const { status } = await Camera.requestCameraPermissionsAsync();
-			  console.log("Camera permission status:", status);
+			//   console.log("Camera permission status:", status);
 			  setPermission({ status, granted: status === 'granted' });
 			  
 			  // Only set camera enabled if permission was just granted
