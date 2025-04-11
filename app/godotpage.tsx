@@ -8,7 +8,7 @@ import HelpModal from "./helpModal"; // Import the help
 
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import { Switch, GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Camera } from 'expo-camera';
+import { Camera, CameraType } from 'expo-camera';
 import { sendData, initializeSocket } from './websocket';
 import { Dimensions } from 'react-native';
 
@@ -167,6 +167,7 @@ export default function GodotPage() {
 
 	//Ed added this
 	const startCameraFeed = () => {
+		console.log("called startcamerafeed");
 		setIsCameraEnabled(true);
 		sendData(JSON.stringify({
 			type: 'camera_control',
@@ -466,11 +467,11 @@ export default function GodotPage() {
 
 
 
-						{isCameraEnabled && permission?.granted && Camera && Camera.Constants && (
+						{isCameraEnabled && permission?.granted && (
 							<Camera
 								ref={cameraRef}
 								style={styles.cameraPreview}
-								type={Camera.Constants.Type.back}
+								type={CameraType.back} 
 								onCameraReady={() => console.log("Camera ready")}
 								onMountError={(error) => {
 									console.error("Camera failed to mount:", error);
@@ -744,16 +745,16 @@ const styles = StyleSheet.create({
 		zIndex: 200,
 		borderWidth: 2,
 		borderColor: 'white',
-	  },
-	  framePreview: {
+	},
+	framePreview: {
 		width: '100%',
 		height: '100%',
-	  },
-	  frameDebugText: {
+	},
+	frameDebugText: {
 		position: 'absolute',
 		bottom: -25,
 		color: 'white',
 		fontSize: 12,
 		backgroundColor: 'rgba(0,0,0,0.5)',
-	  },
+	},
 });
