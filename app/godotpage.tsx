@@ -70,6 +70,7 @@ export default function GodotPage() {
 		let frameInterval: NodeJS.Timeout;
 		let isActive = true;
 
+		console.log('isactive'+isActive+ "iscameraenabled"+isCameraEnabled+"permission granted"+permission?.granted+"cameraref"+cameraRef.current)
 		const captureFrame = async () => {
 			if (!isActive || !isCameraEnabled || !permission?.granted || !cameraRef.current) return;
 
