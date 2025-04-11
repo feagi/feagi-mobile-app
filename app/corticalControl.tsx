@@ -94,23 +94,44 @@ const CorticalPage = () => {
 
     // Add a control based on cortical area data
     const addControl = async (deviceName, dimensions, corticalId) => {
+
+		//4/10/25
+		/*
+			Whenever controls are addede they are added to a seperate async storage thing. At the beginning
+			of a load this async storage is looked at and whatever is in there is added to the sceren and
+			removed from available cortical areas. when its put back it is addded to async storage.
+			so
+			ON ADD CONTROL, ADD TO CORT 2
+			ON LOAD, ADD CORT 2 REMOVE FROM CORT 1 cool. add add Control should remove it from cort1 anyway
+			addCotrol(CORT2, remove CORT1)
+			just like 2 more async storage adds and an extra query per thing. not too bad
+			delete adds to cort1 removes from cort 2 does this help
+			SHOW ON SCREEN
+			IF REMOVED FROM SCREEN AD TO CORT1 REMOVE FROM 2
+
+		*/
         // Track this cortical area as added
-
-
-
         let prom = await TestFetch();
 
         for (let item of prom) {
-            console.log("promised2" + item.toString());
+            //console.log("promised2" + item.toString());
             let trueKey = item[0].toString();
-            console.log(trueKey);
+            //console.log(trueKey);
             if (trueKey.substring(0, 8) === "cortical") {
 
 
                 const newKey = await AsyncStorage.getItem(trueKey);
                 const obj = JSON.parse(newKey);
                 if (obj.key === corticalId) {
+					console.log("The true key is " + trueKey);
+					const savedVal = await AsyncStorage.getItem(trueKey);
+					//console.log("stringifying" + savedVal);
+					await AsyncStorage.setItem((`saved${trueKey}`), savedVal);
+					console.log(await AsyncStorage.getItem(`saved${trueKey}`));
+					console.log((`saved${trueKey}`));
                     await AsyncStorage.removeItem(trueKey);
+
+                    //await AsyncStorage
                     await setMappedAreas(await getAvailableAreas());
                 }
 
@@ -139,12 +160,6 @@ const CorticalPage = () => {
             };
             setControls(prev => [...prev, newControl]);
         }
-        //REMOVE FROM ASYNC STORAGE
-        //await setMappedAreas(await getAvailableAreas());
-        //console.log("deleting" + deleteKey);
-
-
-        //
     };
 
     // Send slider data to FEAGI
@@ -302,37 +317,6 @@ const CorticalPage = () => {
                     setApi(apiValue);
                 }
 
-                /*AsyncStorage.getAllKeys((err, keys) => {
-                    if (err) {
-                        console.log("Error getting keys:", err);
-                        setIsLoading(false);
-                        return;
-                    }
-
-                    if (!keys || keys.length === 0) {
-                        console.log("No keys found in AsyncStorage");
-                        setIsLoading(false);
-                        return;
-                    }
-
-                    AsyncStorage.multiGet(keys, (err, stores) => {
-                        if (err) {
-                            console.log("Error getting values:", err);
-                            setIsLoading(false);
-                            return;
-                        }
-
-                        if (stores && stores.length > 0) {
-                            console.log(stores.length + ": length");
-                            const apiValue = stores[0][1];
-                            console.log("API value from storage:", apiValue);
-                            setApi(apiValue);
-                        } else {
-                            console.log("No values found in AsyncStorage");
-                            setIsLoading(false);
-                        }
-                    });
-                });*/
             }
             catch (error) {
                 console.log("Error in loadAPI:", error);
@@ -351,6 +335,17 @@ const CorticalPage = () => {
     }, [width, height]);
 
     // Effect for loading cortical areas when API is available
+
+
+    //HERE 4/10/25
+
+    /*
+
+        DO THIS STUFF
+
+
+
+    */
     useEffect(() => {
         const loadControls = async () => {
 
@@ -361,11 +356,9 @@ const CorticalPage = () => {
                 var parsedVal = await json.parse(JSONStringPlaceholder);
                 console.log("parsedVal: " + parsedVal);
                 console.log("API not available yet debug");
-                //console.log("parsedVal: " + parsedVal);
                 //setIsLoading(false);
 
             }
-
             let apiVal = (api + "/v1/cortical_area/cortical_area/geometry");
             console.log("API endpoint: " + apiVal);
 
@@ -374,89 +367,20 @@ const CorticalPage = () => {
                 console.log("Fetching cortical areas...");
                 const response = await fetch(apiVal);
                 const json = await response.json();
-
                 // Store all available cortical areas
                 //console.log("here is the json" + JSON.stringify(json));
                 setAvailableCorticalAreas(json);
-
-
-
-
                 // Clear existing controls
                 setControls([]);
                 setAddedCorticalIds([]);
-
-
                 // Here it's mapping the keys to the values found in the API
-
-				/*
-
-                var theKey = await AsyncStorage.getAllKeys()
-                console.log("kets are: " + theKey);
-
-
-
-                for (let key of Object.keys(json)) {
-
-                    // Only auto-add areas with y=1
-                    if (json[key].cortical_dimensions[1] === 1) {
-                        console.log("count = " + count);
-                        console.log("wait", json[key].cortical_name);
-                        const deviceName = json[key].cortical_name;
-                        console.log("corticalName is " + deviceName);
-                        const dimensions = json[key].cortical_dimensions;
-
-                        // Add controls here
-
-                        let stringVar = JSON.stringify('{key: ' + key + ', cortical_name: ' + deviceName + ', cortical_dimensions: [' + dimensions + ']}')
-                        //await AsyncStorage.setItem(("cortical"+count), stringVar);
-
-                        //const firstVal = await AsyncStorage.getItem("cortical0");
-                        const testString = '{"key":"___pwr", "cortical_name":"Brain_Power", "cortical_dimensions":[1,1,1]}'
-
-
-                        let sample = '{"key":"' + key + '", "cortical_name":"' + deviceName + '","cortical_dimensions":[' + dimensions + ']}';
-                        let newSample = sample.toString();
-                        const keyVal = ("cortical" + count).toString();
-                        //console.log("adding " + newSample + " and: " + keyVal);
-
-                        console.log("keyvalue " + keyVal + " " + newSample)
-
-
-                        await AsyncStorage.setItem(keyVal, newSample);
-
-
-                        console.log("sample is " + newSample);
-                        const objectToAdd = JSON.parse(newSample.toString());
-                        console.log("area: ", objectToAdd.key);
-                        //
-                        //await addControl(objectToAdd.cortical_name, objectToAdd.cortical_dimensions, objectToAdd.key);
-                        setAddedCorticalIds(prev => [...prev, (objectToAdd.key)]);
-                        console.log("Look here Adding control for " + deviceName + " with dimensions " + dimensions);
-
-
-
-                        count++;
-
-
-
-                        //also add them to the async storage
-                    }
-
-                }
-
-				*/
-
-
+				//x01
                 //setIsLoading(false);
             }
             catch (error) {
                 console.log("Error loading cortical areas:", error);
                 setIsLoading(false);
             }
-
-
-
         };
         const holderFunc = async () => {
 			//not sure if i need this
@@ -466,7 +390,6 @@ const CorticalPage = () => {
 
     }, [api]);
 
-
     useEffect(() => {
         const cortCheck = async () =>{
 
@@ -475,57 +398,26 @@ const CorticalPage = () => {
 				return;
 			}
 			else{
-				console.log("useEffect" + JSON.stringify(availableCorticalAreas));
 				var theKey = await AsyncStorage.getAllKeys()
-                console.log("kets are: " + theKey);
-
-                //setCount(0);
-
                 for (let key of Object.keys(availableCorticalAreas)) {
-
                     // Only auto-add areas with y=1
                     if (availableCorticalAreas[key].cortical_dimensions[1] === 1) {
-                        console.log("count = " + count);
-                        console.log("wait", availableCorticalAreas[key].cortical_name);
+
                         const deviceName = availableCorticalAreas[key].cortical_name;
-                        console.log("corticalName is " + deviceName);
                         const dimensions = availableCorticalAreas[key].cortical_dimensions;
-
                         // Add controls here
-
                         let stringVar = JSON.stringify('{key: ' + key + ', cortical_name: ' + deviceName + ', cortical_dimensions: [' + dimensions + ']}')
                         //await AsyncStorage.setItem(("cortical"+count), stringVar);
-
                         //const firstVal = await AsyncStorage.getItem("cortical0");
                         const testString = '{"key":"___pwr", "cortical_name":"Brain_Power", "cortical_dimensions":[1,1,1]}'
-
-
                         let sample = '{"key":"' + key + '", "cortical_name":"' + deviceName + '","cortical_dimensions":[' + dimensions + ']}';
                         let newSample = sample.toString();
                         const keyVal = ("cortical" + count).toString();
-                        //console.log("adding " + newSample + " and: " + keyVal);
-
-                        console.log("keyvalue " + keyVal + " " + newSample)
-
-
                         await AsyncStorage.setItem(keyVal, newSample);
-
-
-                        console.log("sample is " + newSample);
                         const objectToAdd = JSON.parse(newSample.toString());
-                        console.log("area: ", objectToAdd.key);
-                        //
-                        //await addControl(objectToAdd.cortical_name, objectToAdd.cortical_dimensions, objectToAdd.key);
                         setAddedCorticalIds(prev => [...prev, (objectToAdd.key)]);
-                        console.log("Look here Adding control for " + deviceName + " with dimensions " + dimensions);
-
-
 
                         count++;
-
-
-
-                        //also add them to the async storage
                     }
 
                 }
@@ -566,9 +458,34 @@ const CorticalPage = () => {
         console.log("control to Remove" + controlToRemove.corticalId);
 
         var key = controlToRemove.corticalId
+
         console.log(availableCorticalAreas[(controlToRemove.corticalId)]);
+        console.log(availableCorticalAreas[key]);
         const deviceName = availableCorticalAreas[key].cortical_name;
         const dimensions = availableCorticalAreas[key].cortical_dimensions;
+
+        let prom = await TestFetch();
+        for (let item of prom) {
+            let trueKey = item[0].toString();
+            console.log(trueKey);
+
+
+            if(trueKey.substring(0, 5) === "saved"){
+				var Newtry = await AsyncStorage.getItem(trueKey);
+                var jsonTry = JSON.parse(Newtry);
+                console.log("trying " + jsonTry.key);
+                if(jsonTry.key === controlToRemove.corticalId){
+					console.log("match! on " + trueKey);
+					await AsyncStorage.removeItem(trueKey);
+				}
+                console.log(trueKey);
+
+                //console.log("trying " + Newtry);
+                //const gotKey = AsyncStorage.getItem
+            }
+        }
+
+
         let sample = '{"key":"' + key + '", "cortical_name":"' + deviceName + '","cortical_dimensions":[' + dimensions + ']}';
         let newSample = sample.toString();
         const keyVal = ("cortical" + count).toString();
@@ -577,14 +494,7 @@ const CorticalPage = () => {
         await AsyncStorage.setItem(keyVal, newSample);
         setMappedAreas(await getAvailableAreas());
         //USEFULL
-        let prom = await TestFetch();
-        for (let item of prom) {
-            console.log(item.toString());
-            let trueKey = item[0].toString();
-            console.log(trueKey);
 
-
-        }
         //console.log(prom.toString());
 
 
@@ -636,36 +546,21 @@ const CorticalPage = () => {
     };
 
     // Get available areas for the modal
-    const getAvailableAreas = async () => {
 
+    //This is only elements that start with cortical
+    const getAvailableAreas = async () => {
         const available = {};
         //look through ASYNC STORAGE. if there add it
-
         //WORK ON THIS PART TODO HERE
-
-
         let prom = await TestFetch();
-
         for (let item of prom) {
-            console.log("promised" + item.toString());
             let trueKey = item[0].toString();
-            console.log(trueKey);
             if (trueKey.substring(0, 8) === "cortical") {
-
-
                 const newKey = await AsyncStorage.getItem(trueKey);
                 const obj = JSON.parse(newKey);
-                console.log("uhh " + availableCorticalAreas[obj.key] + " " + obj.key);
                 available[obj.key] = availableCorticalAreas[obj.key];
-
             }
-
-
         }
-
-
-		console.log("reutnring avalable");
-		console.log("available: " + JSON.stringify(available));
         return available;
     }
 //
@@ -902,11 +797,6 @@ const CorticalPage = () => {
 
                                                 await setMappedAreas(await getAvailableAreas());
 
-
-
-
-                                                //updateControls
-
                                             }}
                                         >
                                             <Text style={styles.modalButtonText}>
@@ -1113,3 +1003,63 @@ const styles = StyleSheet.create({
 });
 
 export default CorticalPage;
+
+
+
+/* X01
+
+                var theKey = await AsyncStorage.getAllKeys()
+                console.log("kets are: " + theKey);
+
+
+
+                for (let key of Object.keys(json)) {
+
+                    // Only auto-add areas with y=1
+                    if (json[key].cortical_dimensions[1] === 1) {
+                        console.log("count = " + count);
+                        console.log("wait", json[key].cortical_name);
+                        const deviceName = json[key].cortical_name;
+                        console.log("corticalName is " + deviceName);
+                        const dimensions = json[key].cortical_dimensions;
+
+                        // Add controls here
+
+                        let stringVar = JSON.stringify('{key: ' + key + ', cortical_name: ' + deviceName + ', cortical_dimensions: [' + dimensions + ']}')
+                        //await AsyncStorage.setItem(("cortical"+count), stringVar);
+
+                        //const firstVal = await AsyncStorage.getItem("cortical0");
+                        const testString = '{"key":"___pwr", "cortical_name":"Brain_Power", "cortical_dimensions":[1,1,1]}'
+
+
+                        let sample = '{"key":"' + key + '", "cortical_name":"' + deviceName + '","cortical_dimensions":[' + dimensions + ']}';
+                        let newSample = sample.toString();
+                        const keyVal = ("cortical" + count).toString();
+                        //console.log("adding " + newSample + " and: " + keyVal);
+
+                        console.log("keyvalue " + keyVal + " " + newSample)
+
+
+                        await AsyncStorage.setItem(keyVal, newSample);
+
+
+                        console.log("sample is " + newSample);
+                        const objectToAdd = JSON.parse(newSample.toString());
+                        console.log("area: ", objectToAdd.key);
+                        //
+                        //await addControl(objectToAdd.cortical_name, objectToAdd.cortical_dimensions, objectToAdd.key);
+                        setAddedCorticalIds(prev => [...prev, (objectToAdd.key)]);
+                        console.log("Look here Adding control for " + deviceName + " with dimensions " + dimensions);
+
+
+
+                        count++;
+
+
+
+                        //also add them to the async storage
+                    }
+
+                }
+
+				*/
