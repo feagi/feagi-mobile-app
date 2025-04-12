@@ -478,7 +478,7 @@ export default function GodotPage() {
 								<Camera
 									ref={cameraRef}
 									style={styles.cameraPreview}
-									type={CameraType.back}
+									type={'back'}
 									onCameraReady={() => 
 										{console.log("Camera ready");
 										setIsCameraMounted(true);
