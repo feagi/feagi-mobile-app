@@ -53,12 +53,13 @@ const CorticalPage = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [api, setApi] = useState("");
     const [isLoading, setIsLoading] = useState(true);
-    const [availableCorticalAreas, setAvailableCorticalAreas] = useState<{ [key: string]: CorticalArea }>({});
+    //const [availableCorticalAreas, setAvailableCorticalAreas] = useState<{ [key: string]: CorticalArea }>({});
+    const [availableCorticalAreas, setAvailableCorticalAreas] = useState({});
     const [addedCorticalIds, setAddedCorticalIds] = useState<string[]>([]);
     const [mappedAreas, setMappedAreas] = useState({});
     const [deleteKey, setDeleteKey] = useState(0);
     //const [count, setCount] = useState(0);
-	var count = 0;
+    var count = 0;
     // Get dynamic modal styles based on orientation
     const getModalStyles = () => {
         if (isLandscape) {
@@ -93,59 +94,50 @@ const CorticalPage = () => {
 
     // Add a control based on cortical area data
     const addControl = async (deviceName, dimensions, corticalId) => {
+
+		//4/10/25
+		/*
+			Whenever controls are addede they are added to a seperate async storage thing. At the beginning
+			of a load this async storage is looked at and whatever is in there is added to the sceren and
+			removed from available cortical areas. when its put back it is addded to async storage.
+			so
+			ON ADD CONTROL, ADD TO CORT 2
+			ON LOAD, ADD CORT 2 REMOVE FROM CORT 1 cool. add add Control should remove it from cort1 anyway
+			addCotrol(CORT2, remove CORT1)
+			just like 2 more async storage adds and an extra query per thing. not too bad
+			delete adds to cort1 removes from cort 2 does this help
+			SHOW ON SCREEN
+			IF REMOVED FROM SCREEN AD TO CORT1 REMOVE FROM 2
+
+		*/
         // Track this cortical area as added
-
-
-
-		let prom = await TestFetch();
+        let prom = await TestFetch();
 
         for (let item of prom) {
-            console.log("promised2" + item.toString());
+            //console.log("promised2" + item.toString());
             let trueKey = item[0].toString();
-            console.log(trueKey);
-            if(trueKey.substring(0,8)==="cortical"){
+            //console.log(trueKey);
+            if (trueKey.substring(0, 8) === "cortical") {
 
 
                 const newKey = await AsyncStorage.getItem(trueKey);
                 const obj = JSON.parse(newKey);
-                if(obj.key === corticalId){
-					await AsyncStorage.removeItem(trueKey);
+                if (obj.key === corticalId) {
+					console.log("The true key is " + trueKey);
+					const savedVal = await AsyncStorage.getItem(trueKey);
+					//console.log("stringifying" + savedVal);
+					await AsyncStorage.setItem((`saved${trueKey}`), savedVal);
+					console.log(await AsyncStorage.getItem(`saved${trueKey}`));
+					console.log((`saved${trueKey}`));
+                    await AsyncStorage.removeItem(trueKey);
+
+                    //await AsyncStorage
                     await setMappedAreas(await getAvailableAreas());
-	                //setDeleteKey(trueKey);
                 }
 
             }
-
-
         }
-        /*
-		I need to change this part
-
-
-
-
-        */
-		/*var keyToDelete = "";
-		AsyncStorage.getAllKeys((err, keys) => {
-			AsyncStorage.multiGet(keys, (err, stores) => {
-				stores.map((result, i, store) => {
-					// get at each store's key/value so you can work with it
-					let key = store[i][0];
-					let value = store[i][1];
-					if(key.substring(0,8)==="cortical"){
-						const obj = JSON.parse(value);
-						//console.log("looping " + key+ " " + value);
-						if(obj.key === corticalId){
-							setDeleteKey(key);
-							//console.log("removing " + key);
-						}
-
-					}
-				});
-			});
-		});*/
-
-		if (dimensions[2] === 1) {
+        if (dimensions[2] === 1) {
             // Toggle controls - x value determines number of toggles
             const newControl: Control = {
                 id: Date.now() + Math.random(),
@@ -168,12 +160,6 @@ const CorticalPage = () => {
             };
             setControls(prev => [...prev, newControl]);
         }
-		//REMOVE FROM ASYNC STORAGE
-		//await setMappedAreas(await getAvailableAreas());
-		//console.log("deleting" + deleteKey);
-
-
-//
     };
 
     // Send slider data to FEAGI
@@ -184,21 +170,37 @@ const CorticalPage = () => {
             const endpoint = `${api}/v1/agent/sustained_stimulation`;
 
             // Create the payload according to the API documentation
+            //var placeholderPayload = "";
+            var placeholderPayload = (`{"stimulation_payload": {"${control.corticalId}": [`);
+            for(let i = 0; i<control.slideCount; i++){
+				if(i === (control.slideCount-1)){
+					placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}]`);
+				}
+				else{
+					placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}], `);
+				}
+				//placeholderPayload += ('[' + i + + ', 0, 0, ' + + '],');
+				//placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}], `);
+				//console.log("placeholder" + control.valueSlider[i]);
+			}
+			placeholderPayload += (`]}}`);
+			console.log("placeholder " + placeholderPayload);
+			//placeholderPayload = placeholderPayload.toString();
             const payload = {
                 "stimulation_payload": {
                     [control.corticalId]: [[index, 0, 0, value]]
                 }
             };
 
-            console.log('Sending slider data:', JSON.stringify(payload));
-
+            console.log('Sending slider data:', JSON.stringify(placeholderPayload));
+			console.log(control);
             // Send the POST request
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(payload)
+                body: placeholderPayload
             });
 
             console.log('Slider data sent:', response.status);
@@ -222,11 +224,13 @@ const CorticalPage = () => {
             // Create the payload according to the API documentation
             const payload = {
                 "stimulation_payload": {
+
                     [control.corticalId]: [[index, 0, 0, value]]
                 }
             };
 
             console.log('Sending toggle data:', JSON.stringify(payload));
+            console.log(control);
 
             // Send the POST request
             const response = await fetch(endpoint, {
@@ -282,10 +286,10 @@ const CorticalPage = () => {
 
     // Effect for orientation change detection and API loading
     useEffect(() => {
-        const updateOrientation = () => {
+        const updateOrientation = async () => {
             const currentWidth = width;
             const currentHeight = height;
-            setIsLandscape(currentWidth > currentHeight);
+            await setIsLandscape(currentWidth > currentHeight);
             console.log(`Orientation changed - Width: ${currentWidth}, Height: ${currentHeight}, Is Landscape: ${currentWidth > currentHeight}`);
         };
 
@@ -293,8 +297,8 @@ const CorticalPage = () => {
         updateOrientation();
 
         // Listen for orientation changes
-        const subscription = ScreenOrientation.addOrientationChangeListener(() => {
-            updateOrientation();
+        const subscription = ScreenOrientation.addOrientationChangeListener(async () => {
+            await updateOrientation();
         });
 
         // Load API data
@@ -303,46 +307,16 @@ const CorticalPage = () => {
                 // This part is getting the keys
                 const apiValue = await AsyncStorage.getItem("user");
 
-                if(apiValue === null){
-					setIsLoading(false);
-					return;
-				}
-				else{
-					console.log("API value from storage:", apiValue);
-					setApi(apiValue);
-				}
+                if (apiValue === null) {
+                    //setIsLoading(false);
+                    console.log("uhhh not going well");
+                    return;
+                }
+                else {
+                    console.log("API value from storage:", apiValue);
+                    setApi(apiValue);
+                }
 
-                /*AsyncStorage.getAllKeys((err, keys) => {
-                    if (err) {
-                        console.log("Error getting keys:", err);
-                        setIsLoading(false);
-                        return;
-                    }
-
-                    if (!keys || keys.length === 0) {
-                        console.log("No keys found in AsyncStorage");
-                        setIsLoading(false);
-                        return;
-                    }
-
-                    AsyncStorage.multiGet(keys, (err, stores) => {
-                        if (err) {
-                            console.log("Error getting values:", err);
-                            setIsLoading(false);
-                            return;
-                        }
-
-                        if (stores && stores.length > 0) {
-							console.log(stores.length + ": length");
-                            const apiValue = stores[0][1];
-                            console.log("API value from storage:", apiValue);
-                            setApi(apiValue);
-                        } else {
-                            console.log("No values found in AsyncStorage");
-                            setIsLoading(false);
-                        }
-                    });
-                });*/
             }
             catch (error) {
                 console.log("Error in loadAPI:", error);
@@ -361,16 +335,30 @@ const CorticalPage = () => {
     }, [width, height]);
 
     // Effect for loading cortical areas when API is available
+
+
+    //HERE 4/10/25
+
+    /*
+
+        DO THIS STUFF
+
+
+
+    */
     useEffect(() => {
         const loadControls = async () => {
-			console.log("loadConts \n \n \n");
+
             // This is reading in the controls
             if (!api) {
-                console.log("API not available yet");
-                setIsLoading(false);
-                return;
-            }
+				//console.log("API not available yet debug");
+				var JSONStringPlaceholder = await ({"___pwr":{"cortical_name":"Brain_Power","cortical_group":"CORE","cortical_sub_group":"","visible":true,"coordinates_2d":[null,null],"coordinates_3d":[10,0,-20],"cortical_dimensions":[1,1,1]},"_death":{"cortical_name":"Brain_Death","cortical_group":"CORE","cortical_sub_group":"","visible":true,"coordinates_2d":[null,null],"coordinates_3d":[10,0,-30],"cortical_dimensions":[1,1,1]},"i__inf":{"cortical_name":"Infrared sensor","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[0,91],"coordinates_3d":[40,0,0],"cortical_dimensions":[1,1,1],"dev_count":1,"cortical_dimensions_per_device":[1,1,1]},"M5Ubem":{"cortical_name":"bemmy","cortical_group":"CUSTOM","cortical_sub_group":"MEMORY","visible":true,"coordinates_2d":[15,25],"coordinates_3d":[40,0,0],"cortical_dimensions":[1,1,1]},"o__mot":{"cortical_name":"Motor control","cortical_group":"OPU","cortical_sub_group":"","visible":true,"coordinates_2d":[-8,-91],"coordinates_3d":[40,0,0],"cortical_dimensions":[2,1,10],"dev_count":1,"cortical_dimensions_per_device":[2,1,10]},"C7Vcor":{"cortical_name":"cory","cortical_group":"CUSTOM","cortical_sub_group":"","visible":true,"coordinates_2d":[-67,-30],"coordinates_3d":[40,0,0],"cortical_dimensions":[1,1,1]},"iv00CC":{"cortical_name":"Central vision sensor in color","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[41,157],"coordinates_3d":[30,100,-20],"cortical_dimensions":[96,32,3],"dev_count":3,"cortical_dimensions_per_device":[32,32,3]},"iv00_C":{"cortical_name":"Central vision sensor","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[42,107],"coordinates_3d":[30,40,-20],"cortical_dimensions":[192,64,1],"dev_count":3,"cortical_dimensions_per_device":[64,64,1]},"iv00TL":{"cortical_name":"Peripheral vision sensor - top left","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[76,128],"coordinates_3d":[20,105,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00TM":{"cortical_name":"Peripheral vision sensor - top middle","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[91,56],"coordinates_3d":[55,105,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00TR":{"cortical_name":"Peripheral vision sensor - top right","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[74,127],"coordinates_3d":[95,105,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00ML":{"cortical_name":"Peripheral vision sensor - middle left","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[61,163],"coordinates_3d":[20,70,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00MR":{"cortical_name":"Peripheral vision sensor - middle right","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[81,156],"coordinates_3d":[95,70,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00BL":{"cortical_name":"Peripheral vision sensor - bottom left","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[99,12],"coordinates_3d":[20,30,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00BR":{"cortical_name":"Peripheral vision sensor - bottom right","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[59,144],"coordinates_3d":[95,30,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00BM":{"cortical_name":"Peripheral vision sensor - bottom middle","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[73,16],"coordinates_3d":[55,30,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"o_mctl":{"cortical_name":"Motion control","cortical_group":"OPU","cortical_sub_group":"","visible":true,"coordinates_2d":[1019,98],"coordinates_3d":[20,0,-10],"cortical_dimensions":[8,3,10],"dev_count":2,"cortical_dimensions_per_device":[4,3,10]}}).toString();
+                var parsedVal = await json.parse(JSONStringPlaceholder);
+                console.log("parsedVal: " + parsedVal);
+                console.log("API not available yet debug");
+                //setIsLoading(false);
 
+            }
             let apiVal = (api + "/v1/cortical_area/cortical_area/geometry");
             console.log("API endpoint: " + apiVal);
 
@@ -379,136 +367,101 @@ const CorticalPage = () => {
                 console.log("Fetching cortical areas...");
                 const response = await fetch(apiVal);
                 const json = await response.json();
-
-                console.log("Received cortical areas data");
-
                 // Store all available cortical areas
                 //console.log("here is the json" + JSON.stringify(json));
                 setAvailableCorticalAreas(json);
-
-
                 // Clear existing controls
                 setControls([]);
                 setAddedCorticalIds([]);
-
-
                 // Here it's mapping the keys to the values found in the API
-                //Object.keys(json).forEach(function (key) {
-
-				//count(0);
-				var theKey = await AsyncStorage.getAllKeys()
-				console.log("kets are: " + theKey);
-
-					//setCount(0);
-
-					for(let key of Object.keys(json)){
-
-	                    // Only auto-add areas with y=1
-	                    if (json[key].cortical_dimensions[1] === 1) {
-							console.log("count = " + count);
-	                        const deviceName = availableCorticalAreas[key].cortical_name;
-	                        console.log("corticalName is " + deviceName);
-	                        const dimensions = availableCorticalAreas[key].cortical_dimensions;
-
-	                        // Add controls here
-
-	                        let stringVar = JSON.stringify('{key: '+key+', cortical_name: '+deviceName+', cortical_dimensions: ['+dimensions+']}')
-							//await AsyncStorage.setItem(("cortical"+count), stringVar);
-
-	                        //const firstVal = await AsyncStorage.getItem("cortical0");
-	                        const testString = '{"key":"___pwr", "cortical_name":"Brain_Power", "cortical_dimensions":[1,1,1]}'
-
-
-							let sample = '{"key":"'+key+'", "cortical_name":"'+deviceName+'","cortical_dimensions":['+dimensions+']}';
-							let newSample = sample.toString();
-							const keyVal = ("cortical"+count).toString();
-							//console.log("adding " + newSample + " and: " + keyVal);
-
-							console.log("keyvalue " + keyVal + " " + newSample)
-
-
-							await AsyncStorage.setItem(keyVal, newSample);
-
-
-							console.log("sample is " + newSample);
-							const objectToAdd = JSON.parse(newSample.toString());
-							console.log("area: ", objectToAdd.key);
-							//
-							//await addControl(objectToAdd.cortical_name, objectToAdd.cortical_dimensions, objectToAdd.key);
-							setAddedCorticalIds(prev => [...prev, (objectToAdd.key)]);
-							console.log("Look here Adding control for " + deviceName + " with dimensions " + dimensions);
-
-
-
-							count++;
-
-
-
-	                        //also add them to the async storage
-	                    }
-
-	                }
-
-
-				setIsLoading(false);
+				//x01
+                //setIsLoading(false);
             }
             catch (error) {
                 console.log("Error loading cortical areas:", error);
                 setIsLoading(false);
             }
-
-
-
         };
-
-		const runBoth = async () => {
-
-			if (!api) {
-                console.log("API not available yet");
-                setIsLoading(false);
-                return;
-            }
-			else{
-				await loadControls();
-				await setMappedAreas(await getAvailableAreas());
-			}
-
-		}
-
-
-		runBoth();
+        const holderFunc = async () => {
+			//not sure if i need this
+            await loadControls();
+        }
+        holderFunc();
 
     }, [api]);
 
+    useEffect(() => {
+        const cortCheck = async () =>{
 
-	useEffect(() => {
-		const removeKey = async() =>{
-			if(deleteKey === 0){
-				return
+	        if (Object.keys(availableCorticalAreas).length === 0) {
+				console.log("not happening")
+				return;
 			}
 			else{
+				var theKey = await AsyncStorage.getAllKeys()
+                for (let key of Object.keys(availableCorticalAreas)) {
+                    // Only auto-add areas with y=1
+                    if (availableCorticalAreas[key].cortical_dimensions[1] === 1) {
 
-				await AsyncStorage.removeItem(deleteKey);
-				setMappedAreas(await getAvailableAreas());
+                        const deviceName = availableCorticalAreas[key].cortical_name;
+                        const dimensions = availableCorticalAreas[key].cortical_dimensions;
+                        // Add controls here
+                        let stringVar = JSON.stringify('{key: ' + key + ', cortical_name: ' + deviceName + ', cortical_dimensions: [' + dimensions + ']}')
+                        //await AsyncStorage.setItem(("cortical"+count), stringVar);
+                        //const firstVal = await AsyncStorage.getItem("cortical0");
+                        const testString = '{"key":"___pwr", "cortical_name":"Brain_Power", "cortical_dimensions":[1,1,1]}'
+                        let sample = '{"key":"' + key + '", "cortical_name":"' + deviceName + '","cortical_dimensions":[' + dimensions + ']}';
+                        let newSample = sample.toString();
+                        const keyVal = ("cortical" + count).toString();
+                        await AsyncStorage.setItem(keyVal, newSample);
+                        const objectToAdd = JSON.parse(newSample.toString());
+                        setAddedCorticalIds(prev => [...prev, (objectToAdd.key)]);
+
+                        count++;
+                    }
+
+                }
+
+				let prom = await TestFetch();
+                for (let item of prom) {
+					let trueKey = item[0].toString();
+					console.log("here?");
+					if(trueKey.substring(0, 5) === "saved"){
+						var asyncString = await AsyncStorage.getItem(trueKey);
+						var JSONobj = JSON.parse(asyncString);
+						console.log(JSON.stringify(JSONobj));
+						await addControl(
+                        JSONobj.cortical_name,
+                        JSONobj.cortical_dimensions,
+                        JSONobj.key,
+                    );
+
+					}
+
+				}
+
+
+				await setMappedAreas(await getAvailableAreas());
+				setIsLoading(false);
+
+
 			}
-
 		}
+		cortCheck();
 
-	removeKey();
+    }, [availableCorticalAreas]);
 
-	}, [deleteKey]);
-
-	const TestFetch = () => {
-		return new Promise( async (resolve, reject) => {
-		try {
-			let keys = await AsyncStorage.getAllKeys();
-			let items = await AsyncStorage.multiGet(keys)
-			resolve(items)
-		} catch (error) {
-			reject(new Error('Error getting items from AsyncStorage: ' + error.message))
-		}
-		});
-	}
+    const TestFetch = () => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let keys = await AsyncStorage.getAllKeys();
+                let items = await AsyncStorage.multiGet(keys)
+                resolve(items)
+            } catch (error) {
+                reject(new Error('Error getting items from AsyncStorage: ' + error.message))
+            }
+        });
+    }
 
 
     // Delete a control box
@@ -524,29 +477,45 @@ const CorticalPage = () => {
 
         console.log("control to Remove" + controlToRemove.corticalId);
 
-		var key = controlToRemove.corticalId
-		console.log(availableCorticalAreas[(controlToRemove.corticalId)]);
-		const deviceName = availableCorticalAreas[key].cortical_name;
+        var key = controlToRemove.corticalId
+
+        console.log(availableCorticalAreas[(controlToRemove.corticalId)]);
+        console.log(availableCorticalAreas[key]);
+        const deviceName = availableCorticalAreas[key].cortical_name;
         const dimensions = availableCorticalAreas[key].cortical_dimensions;
-        let sample = '{"key":"'+key+'", "cortical_name":"'+deviceName+'","cortical_dimensions":['+dimensions+']}';
-	    let newSample = sample.toString();
-	    const keyVal = ("cortical"+count).toString();
-	    //console.log("adding " + newSample + " and: " + keyVal);
 
-	    await AsyncStorage.setItem(keyVal, newSample);
-	    setMappedAreas(await getAvailableAreas());
-		//USEFULL
-		let prom = await TestFetch();
-		for (let item of prom) {
-			console.log(item.toString());
-			let trueKey = item[0].toString();
-			console.log(trueKey);
-			/*if(trueKey === controlToRemove.corticalId){
-				console.log("removing" + trueKey);
-			}*/
+        let prom = await TestFetch();
+        for (let item of prom) {
+            let trueKey = item[0].toString();
+            console.log(trueKey);
 
-		}
-		//console.log(prom.toString());
+
+            if(trueKey.substring(0, 5) === "saved"){
+				var Newtry = await AsyncStorage.getItem(trueKey);
+                var jsonTry = JSON.parse(Newtry);
+                console.log("trying " + jsonTry.key);
+                if(jsonTry.key === controlToRemove.corticalId){
+					console.log("match! on " + trueKey);
+					await AsyncStorage.removeItem(trueKey);
+				}
+                console.log(trueKey);
+
+                //console.log("trying " + Newtry);
+                //const gotKey = AsyncStorage.getItem
+            }
+        }
+
+
+        let sample = '{"key":"' + key + '", "cortical_name":"' + deviceName + '","cortical_dimensions":[' + dimensions + ']}';
+        let newSample = sample.toString();
+        const keyVal = ("cortical" + count).toString();
+        //console.log("adding " + newSample + " and: " + keyVal);
+
+        await AsyncStorage.setItem(keyVal, newSample);
+        setMappedAreas(await getAvailableAreas());
+        //USEFULL
+
+        //console.log(prom.toString());
 
 
 
@@ -597,246 +566,208 @@ const CorticalPage = () => {
     };
 
     // Get available areas for the modal
+
+    //This is only elements that start with cortical
     const getAvailableAreas = async () => {
-
         const available = {};
-		//look through ASYNC STORAGE. if there add it
-
-		//WORK ON THIS PART TODO HERE
-
-
-		let prom = await TestFetch();
-
+        //look through ASYNC STORAGE. if there add it
+        //WORK ON THIS PART TODO HERE
+        let prom = await TestFetch();
         for (let item of prom) {
-            console.log("promised" + item.toString());
             let trueKey = item[0].toString();
-            console.log(trueKey);
-            if(trueKey.substring(0,8)==="cortical"){
-
-
-				const newKey = await AsyncStorage.getItem(trueKey);
-				const obj = JSON.parse(newKey);
-				console.log("uhh" + obj + " " + obj.key);
+            if (trueKey.substring(0, 8) === "cortical") {
+                const newKey = await AsyncStorage.getItem(trueKey);
+                const obj = JSON.parse(newKey);
                 available[obj.key] = availableCorticalAreas[obj.key];
-
             }
-
-
         }
-
-
-
-
-
-
-		/*AsyncStorage.getAllKeys((err, keys) => {
-			//console.log(keys);
-			if(keys.length <= 1){
-				console.log("not enough keyskeys");
-				return available;
-			}
-			else{
-				AsyncStorage.multiGet(keys, (err, stores) => {
-
-					stores.map((result, i, store) => {
-						// get at each store's key/value so you can work with it
-		                let key = store[i][0];
-		                let value = store[i][1];
-		                if(key.substring(0,8)==="cortical"){
-							console.log('key' + key);
-							console.log("value" + value);
-							const obj = JSON.parse(value);
-							//await AsyncStorage.setItem(keyStr, obj);
-							console.log("importatn key:",obj.key);
-							//obj
-							//console.log("ben look here" + JSON.stringify(availableCorticalAreas[obj.key]));
-
-							available[obj.key] = availableCorticalAreas[obj.key];
-							//console.log(available["___pwr"])
-							//console.log(obj.cortical_name);
-					    }
-					});
-				});
-	        }
-        });
-	*/
-
-
         return available;
-    };
-
+    }
+//
     // Navigate back to godot page
     const goBack = () => {
         router.push('/godotpage');
     };
+//
 
     // Render a single control box
     const renderControl = (control: Control) => {
         return (
             <Swipeable
-                key={`control-${control.id}`}
+                key={`control-${control.id}`
+                }
                 renderRightActions={() => (
                     <TouchableOpacity
                         style={styles.deleteButton}
                         onPress={() => deleteControl(control.id)}
                     >
-                        <Text style={styles.deleteButtonText}>Delete</Text>
+                        <Text style={styles.deleteButtonText}> Delete </Text>
                     </TouchableOpacity>
                 )}
             >
                 <View style={styles.controlBox}>
                     <Text style={styles.controlTitle}>
-                        {control.corticalName ||
+                        {
+                            control.corticalName ||
                             (control.type === '1D'
                                 ? '1D Cortical Area'
                                 : control.type === '2D'
                                     ? '2D Cortical Area'
-                                    : 'Switch Control')}
+                                    : 'Switch Control')
+                        }
                     </Text>
 
-                    {control.type === '1D' && control.valueSlider ? (
-                        // Render multiple sliders if needed
-                        control.valueSlider.map((value, index) => (
-                            <View key={`slider-${control.id}-${index}`}>
+                    {
+                        control.type === '1D' && control.valueSlider ? (
+                            // Render multiple sliders if needed
+                            control.valueSlider.map((value, index) => (
+                                <View key={`slider-${control.id}-${index}`}>
+                                    <Text style={{color: 'white', fontSize: 20}}>
+                                        {index}
+                                    </Text>
+                                    <Slider
+                                        style={styles.slider}
+                                        minimumValue={0}
+                                        maximumValue={100}
+                                        step={.001}
+                                        value={value}
+
+                                        onSlidingComplete={(newValue) => {
+                                            const newValues = [...control.valueSlider];
+                                            newValues[index] = newValue;
+                                            setControls(
+                                                controls.map((c) =>
+                                                    c.id === control.id ? { ...c, valueSlider: newValues } : c
+                                                )
+                                            );
+                                            if (control.corticalId) {
+                                                sendSliderData(control, index, newValue);
+                                            }
+                                        }}
+                                        minimumTrackTintColor="#484a6e"
+                                        maximumTrackTintColor="#555"
+                                        thumbTintColor="#484a6e"
+                                    />
+                                </View>
+                            ))
+                        ) : control.type === '1D' ? (
+                            <Slider
+                                style={styles.slider}
+                                minimumValue={0}
+                                maximumValue={100}
+                                step={1}
+                                value={control.value}
+                                onSlidingComplete={(value) => updateSlider1D(control.id, value)}
+                                minimumTrackTintColor="#484a6e"
+                                maximumTrackTintColor="#555"
+                                thumbTintColor="#484a6e"
+                            />
+                        ) : control.type === '2D' ? (
+                            <>
                                 <Slider
                                     style={styles.slider}
                                     minimumValue={0}
                                     maximumValue={100}
                                     step={1}
-                                    value={value}
-
-                                    onSlidingComplete={(newValue) => {
-                                        const newValues = [...control.valueSlider];
-                                        newValues[index] = newValue;
-                                        setControls(
-                                            controls.map((c) =>
-                                                c.id === control.id ? { ...c, valueSlider: newValues } : c
-                                            )
-                                        );
-                                        if (control.corticalId) {
-                                            sendSliderData(control, index, newValue);
-                                        }
-                                    }}
+                                    value={control.valueX}
+                                    onSlidingComplete={(value) => updateSlider2D(control.id, 'valueX', value)}
                                     minimumTrackTintColor="#484a6e"
                                     maximumTrackTintColor="#555"
                                     thumbTintColor="#484a6e"
                                 />
-                            </View>
-                        ))
-                    ) : control.type === '1D' ? (
-                        <Slider
-                            style={styles.slider}
-                            minimumValue={0}
-                            maximumValue={100}
-                            step={1}
-                            value={control.value}
-                            onSlidingComplete={(value) => updateSlider1D(control.id, value)}
-                            minimumTrackTintColor="#484a6e"
-                            maximumTrackTintColor="#555"
-                            thumbTintColor="#484a6e"
-                        />
-                    ) : control.type === '2D' ? (
-                        <>
-                            <Slider
-                                style={styles.slider}
-                                minimumValue={0}
-                                maximumValue={100}
-                                step={1}
-                                value={control.valueX}
-                                onSlidingComplete={(value) => updateSlider2D(control.id, 'valueX', value)}
-                                minimumTrackTintColor="#484a6e"
-                                maximumTrackTintColor="#555"
-                                thumbTintColor="#484a6e"
-                            />
-                            <Slider
-                                style={styles.slider}
-                                minimumValue={0}
-                                maximumValue={100}
-                                step={1}
-                                value={control.valueY}
-                                onSlidingComplete={(value) => updateSlider2D(control.id, 'valueY', value)}
-                                minimumTrackTintColor="#484a6e"
-                                maximumTrackTintColor="#555"
-                                thumbTintColor="#484a6e"
-                            />
-                        </>
-                    ) : control.type === '1DT' && control.valueSwitch ? (
-                        // Render multiple toggles if needed
-                        control.valueSwitch.map((switchState, index) => (
-                            <View key={`toggle-${control.id}-${index}`} style={styles.switchView}>
+                                <Slider
+                                    style={styles.slider}
+                                    minimumValue={0}
+                                    maximumValue={100}
+                                    step={1}
+                                    value={control.valueY}
+                                    onSlidingComplete={(value) => updateSlider2D(control.id, 'valueY', value)}
+                                    minimumTrackTintColor="#484a6e"
+                                    maximumTrackTintColor="#555"
+                                    thumbTintColor="#484a6e"
+                                />
+                            </>
+                        ) : control.type === '1DT' && control.valueSwitch ? (
+                            // Render multiple toggles if needed
+                            control.valueSwitch.map((switchState, index) => (
+                                <View key={`toggle-${control.id}-${index}`} style={styles.switchView} >
+                                    <Text style={styles.switchText} >
+                                        {index}
+                                    </Text>
+                                    < View style={styles.switch} >
+                                        <Switch
+                                            style={{ transform: [{ scaleX: 1.1 }, { scaleY: 1.1 }] }}
+                                            value={switchState}
+                                            onValueChange={() => {
+                                                const newSwitchValues = [...control.valueSwitch];
+                                                newSwitchValues[index] = !switchState;
+                                                setControls(
+                                                    controls.map((c) =>
+                                                        c.id === control.id ? { ...c, valueSwitch: newSwitchValues } : c
+                                                    )
+                                                );
+                                                if (control.corticalId) {
+                                                    sendToggleData(control, index, !switchState);
+                                                }
+                                            }}
+                                        />
+                                    </View>
+                                    {
+                                        !switchState ? (
+                                            <TouchableOpacity
+                                                style={styles.activateButton}
+                                                onPress={() => control.corticalId && activateControl(control, index)
+                                                }
+                                            >
+                                                <Text style={styles.addButtonText}> Activate </Text>
+                                            </TouchableOpacity>
+                                        ) : null}
+                                </View>
+                            ))
+                        ) : (
+                            // Single toggle
+                            <View style={styles.switchView} >
                                 <Text style={styles.switchText}>
-                                    {switchState ? '1' : '0'}
+                                    {control.switch === true ? '1' : '0'}
                                 </Text>
-                                <View style={styles.switch}>
-                                    <Switch
-                                        style={{ transform: [{ scaleX: 1.1 }, { scaleY: 1.1 }] }}
-                                        value={switchState}
-                                        onValueChange={() => {
-                                            const newSwitchValues = [...control.valueSwitch];
-                                            newSwitchValues[index] = !switchState;
-                                            setControls(
-                                                controls.map((c) =>
-                                                    c.id === control.id ? { ...c, valueSwitch: newSwitchValues } : c
-                                                )
-                                            );
-                                            if (control.corticalId) {
-                                                sendToggleData(control, index, !switchState);
-                                            }
-                                        }}
+
+                                < View style={styles.switch} >
+                                    <Switch style={{ transform: [{ scaleX: 1.1 }, { scaleY: 1.1 }] }}
+                                        value={control.switch}
+                                        onValueChange={(value) => updateSwitch(control.id, !value)}
                                     />
                                 </View>
-                                {!switchState ? (
-                                    <TouchableOpacity
-                                        style={styles.activateButton}
-                                        onPress={() => control.corticalId && activateControl(control, index)}
-                                    >
-                                        <Text style={styles.addButtonText}>Activate</Text>
-                                    </TouchableOpacity>
-                                ) : null}
-                            </View>
-                        ))
-                    ) : (
-                        // Single toggle
-                        <View style={styles.switchView}>
-                            <Text style={styles.switchText}>
-                                {control.switch === true ? '1' : '0'}
-                            </Text>
 
-                            <View style={styles.switch}>
-                                <Switch style={{ transform: [{ scaleX: 1.1 }, { scaleY: 1.1 }] }}
-                                    value={control.switch}
-                                    onValueChange={(value) => updateSwitch(control.id, !value)}
-                                />
+                                {
+                                    control.switch === false ? (
+                                        <TouchableOpacity
+                                            style={styles.activateButton}
+                                            onPress={() => control.corticalId && activateControl(control)
+                                            }
+                                        >
+                                            <Text style={styles.addButtonText}> Activate </Text>
+                                        </TouchableOpacity>
+                                    ) : null}
                             </View>
-
-                            {control.switch === false ? (
-                                <TouchableOpacity
-                                    style={styles.activateButton}
-                                    onPress={() => control.corticalId && activateControl(control)}
-                                >
-                                    <Text style={styles.addButtonText}>Activate</Text>
-                                </TouchableOpacity>
-                            ) : null}
-                        </View>
-                    )}
+                        )}
                 </View>
             </Swipeable>
         );
     };
 
     return (
-        <GestureHandlerRootView style={styles.container}>
+        <GestureHandlerRootView style={styles.container} >
             <View style={styles.header}>
-                <TouchableOpacity onPress={goBack} style={styles.backButton}>
+                <TouchableOpacity onPress={goBack} style={styles.backButton} >
                     <Ionicons name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles.title}>Cortical Controls</Text>
-                <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-                    <Text style={styles.addButtonText}>+</Text>
+                < Text style={styles.title} > Cortical Controls </Text>
+                < TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+                    <Text style={styles.addButtonText}> +</Text>
                 </TouchableOpacity>
             </View>
 
-            <Modal
+            < Modal
                 visible={modalVisible}
                 transparent={true}
                 animationType="fade"
@@ -848,10 +779,10 @@ const CorticalPage = () => {
                         <View style={styles.modalBackdrop} />
                     </TouchableWithoutFeedback>
 
-                    <View style={[styles.modalContent, getModalStyles().modalContent]}>
+                    < View style={[styles.modalContent, getModalStyles().modalContent]} >
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Add a Cortical Area</Text>
-                            <TouchableOpacity
+                            <Text style={styles.modalTitle}> Add a Cortical Area </Text>
+                            < TouchableOpacity
                                 onPress={() => setModalVisible(false)}
                                 style={styles.closeButton}
                             >
@@ -859,66 +790,67 @@ const CorticalPage = () => {
                             </TouchableOpacity>
                         </View>
 
-                        <ScrollView
+                        < ScrollView
                             style={styles.modalScrollView}
                             contentContainerStyle={styles.modalScrollContent}
                             showsVerticalScrollIndicator={true}
                         >
-                            {Object.keys(mappedAreas).length > 0 ? (
-                                Object.keys(mappedAreas).map(key => (
-                                    <TouchableOpacity
-                                        key={`modal-item-${key}`}
-                                        style={styles.modalButton}
-                                        onPress={async () => {
-											//BEN TODO
-											//get add control
-											//console.log("key is " + key);
-											//console.log(JSON.stringify(mappedAreas));
-											//setMappedAreas([]);
-											setModalVisible(false);
-											setMappedAreas({});
-                                            await addControl(
-                                                availableCorticalAreas[key].cortical_name,
-                                                availableCorticalAreas[key].cortical_dimensions,
-                                                key,
-                                            );
+                            {
+                                Object.keys(mappedAreas).length > 0 ? (
+                                    Object.keys(mappedAreas).map(key => (
 
-											await setMappedAreas(await getAvailableAreas());
+                                        <TouchableOpacity
+                                            key={`modal-item-${key}`}
+                                            style={styles.modalButton}
+                                            onPress={async () => {
+												console.log("mapped: "+  availableCorticalAreas[key]);
 
+                                                //BEN TODO
+                                                //get add control
+                                                //console.log("key is " + key);
+                                                //console.log(JSON.stringify(mappedAreas));
+                                                //setMappedAreas([]);
+                                                setModalVisible(false);
+                                                //setMappedAreas({});
+                                                await addControl(
+                                                    availableCorticalAreas[key].cortical_name,
+                                                    availableCorticalAreas[key].cortical_dimensions,
+                                                    key,
+                                                );
 
+                                                await setMappedAreas(await getAvailableAreas());
 
-
-											//updateControls
-
-                                        }}
-                                    >
-                                        <Text style={styles.modalButtonText}>
-                                            {availableCorticalAreas[key].cortical_name}
+                                            }}
+                                        >
+                                            <Text style={styles.modalButtonText}>
+                                                {availableCorticalAreas[key].cortical_name}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))
+                                ) : (
+                                    <View style={styles.noAreasContainer} >
+                                        <Text style={styles.noAreasText}>
+                                            No additional cortical areas available
                                         </Text>
-                                    </TouchableOpacity>
-                                ))
-                            ) : (
-                                <View style={styles.noAreasContainer}>
-                                    <Text style={styles.noAreasText}>
-                                        No additional cortical areas available
-                                    </Text>
-                                </View>
-                            )}
+                                    </View>
+                                )}
                         </ScrollView>
                     </View>
                 </View>
             </Modal>
 
-            {isLoading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#484a6e" />
-                    <Text style={styles.loadingText}>Loading cortical areas...</Text>
-                </View>
-            ) : (
-                <ScrollView style={styles.scrollView}>
-                    {controls.map((control) => renderControl(control))}
-                </ScrollView>
-            )}
+            {
+                isLoading ? (
+                    <View style={styles.loadingContainer} >
+                        <ActivityIndicator size="large" color="#484a6e" />
+                        <Text style={styles.loadingText}> Loading cortical areas...</Text>
+                    </View>
+                ) : (
+                    <ScrollView style={styles.scrollView} >
+                        {controls.map((control) => renderControl(control))}
+                    </ScrollView>
+                )
+            }
         </GestureHandlerRootView>
     );
 };
@@ -1094,3 +1026,63 @@ const styles = StyleSheet.create({
 });
 
 export default CorticalPage;
+
+
+
+/* X01
+
+                var theKey = await AsyncStorage.getAllKeys()
+                console.log("kets are: " + theKey);
+
+
+
+                for (let key of Object.keys(json)) {
+
+                    // Only auto-add areas with y=1
+                    if (json[key].cortical_dimensions[1] === 1) {
+                        console.log("count = " + count);
+                        console.log("wait", json[key].cortical_name);
+                        const deviceName = json[key].cortical_name;
+                        console.log("corticalName is " + deviceName);
+                        const dimensions = json[key].cortical_dimensions;
+
+                        // Add controls here
+
+                        let stringVar = JSON.stringify('{key: ' + key + ', cortical_name: ' + deviceName + ', cortical_dimensions: [' + dimensions + ']}')
+                        //await AsyncStorage.setItem(("cortical"+count), stringVar);
+
+                        //const firstVal = await AsyncStorage.getItem("cortical0");
+                        const testString = '{"key":"___pwr", "cortical_name":"Brain_Power", "cortical_dimensions":[1,1,1]}'
+
+
+                        let sample = '{"key":"' + key + '", "cortical_name":"' + deviceName + '","cortical_dimensions":[' + dimensions + ']}';
+                        let newSample = sample.toString();
+                        const keyVal = ("cortical" + count).toString();
+                        //console.log("adding " + newSample + " and: " + keyVal);
+
+                        console.log("keyvalue " + keyVal + " " + newSample)
+
+
+                        await AsyncStorage.setItem(keyVal, newSample);
+
+
+                        console.log("sample is " + newSample);
+                        const objectToAdd = JSON.parse(newSample.toString());
+                        console.log("area: ", objectToAdd.key);
+                        //
+                        //await addControl(objectToAdd.cortical_name, objectToAdd.cortical_dimensions, objectToAdd.key);
+                        setAddedCorticalIds(prev => [...prev, (objectToAdd.key)]);
+                        console.log("Look here Adding control for " + deviceName + " with dimensions " + dimensions);
+
+
+
+                        count++;
+
+
+
+                        //also add them to the async storage
+                    }
+
+                }
+
+				*/

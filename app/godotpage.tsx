@@ -11,6 +11,8 @@ import { Switch, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Camera, CameraType } from 'expo-camera';
 import { sendData, initializeSocket } from './websocket';
 import { Dimensions } from 'react-native';
+import capabilities from '../constants/capabilities.js';
+
 
 type CameraPermissionResponse = {
 	status: 'granted' | 'denied' | 'undetermined';
@@ -24,6 +26,10 @@ export default function GodotPage() {
 	const [mobileSettingsModalVisible, setMobileSettingsModalVisible] = useState(false);
 	const [isAccelerometerEnabled, setIsAccelerometerEnabled] = useState(false);
 	const [isGyroscopeEnabled, setIsGyroscopeEnabled] = useState(false);
+	let minAccel = { x: Infinity, y: Infinity, z: Infinity };
+	let maxAccel = { x: -Infinity, y: -Infinity, z: -Infinity };
+	let minGyro = { x: Infinity, y: Infinity, z: Infinity };
+	let maxGyro = { x: -Infinity, y: -Infinity, z: -Infinity };
 	//camera
 	const cameraRef = useRef<Camera>(null);
 	const [isCameraEnabled, setIsCameraEnabled] = useState(false);
@@ -67,53 +73,8 @@ export default function GodotPage() {
 	// const [hasAccelerometerPermission, setHasAccelerometerPermission] = useState(false);
 	useEffect(() => {
 		initializeSocket();
+		console.log('initializing socket');
 	}, []);
-
-	useEffect(() => {
-		let frameInterval: NodeJS.Timeout;
-		let isActive = true;
-
-		console.log('isactive'+isActive+ "iscameraenabled"+isCameraEnabled+"permission granted"+permission?.granted+"cameraref"+cameraRef.current)
-		const captureFrame = async () => {
-			if (!isCameraEnabled || !permission?.granted || !isCameraMounted) {return;}
-
-			try {
-				const photo = await cameraRef.current.takePictureAsync({
-					quality: 0.7,
-					base64: true,
-					skipProcessing: true
-				});
-				sendData(JSON.stringify({
-					type: 'camera_frame',
-					data: photo.base64,
-					width: photo.width,
-					height: photo.height,
-					timestamp: Date.now()
-
-
-				}));
-
-				setLastFrame(`data:image/jpeg;base64,${photo.base64}`);
-				console.log('Camera frame captured:', {
-					dimensions: `${photo.width}x${photo.height}`,
-					size: `${Math.round(photo.base64.length / 1024)} KB`,
-					timestamp: new Date().toISOString()
-				});
-
-			} catch (error) {
-				console.error('Frame capture error:', error);
-			}
-		};
-
-		if (isCameraEnabled && permission?.granted) {
-			frameInterval = setInterval(captureFrame, 1000 / 15); // ~15 FPS
-		}
-
-		return () => {
-			isActive = false;
-			if (frameInterval) clearInterval(frameInterval);
-		};
-	}, [isCameraEnabled, permission?.granted, isCameraMounted]); // Add isCameraMounted
 
 	// const handleAccelPermission = async () => {
 	// 	const { status: permissionStatus } = await Accelerometer.requestPermissionsAsync();
@@ -123,22 +84,56 @@ export default function GodotPage() {
 	// 	}
 	// }
 
-	const updateSensoryData = async () => { //called when button apply is pressed
-		// Handle sensors first
+	const updateSensoryData = () => {
+		setIsAccelerometerEnabled(tempAccelEnable);
+		setIsGyroscopeEnabled(tempGyroEnable);
+		setIsCameraEnabled(tempCameraEnable);
 		if (tempAccelEnable) {
+			// if (!Accelerometer.hasListeners()) {
+			// 	Accelerometer.addListener(data => {
+			// 		console.log('Accelerometer data:', data);
+			// 		sendData(JSON.stringify(data));
+			// 	});
+			// 	Accelerometer.setUpdateInterval(1000);
 			const sub = Accelerometer.addListener(data => {
-				sendData(JSON.stringify(data));
+				minAccel.x = Math.min(minAccel.x, data.x);
+				minAccel.y = Math.min(minAccel.y, data.y);
+				minAccel.z = Math.min(minAccel.z, data.z);
+
+				maxAccel.x = Math.max(maxAccel.x, data.x);
+				maxAccel.y = Math.max(maxAccel.y, data.y);
+				maxAccel.z = Math.max(maxAccel.z, data.z);
+
+				capabilities.capabilities.input.accelerometer[0].min_value = [minAccel.x,minAccel.y,minAccel.z,];
+				capabilities.capabilities.input.accelerometer[0].max_value = [maxAccel.x,maxAccel.y,maxAccel.z,];
+
+				capabilities.capabilities.input.accelerometer[0].disabled = false;
+				// console.log(JSON.stringify(capabilities));
+				sendData(JSON.stringify(capabilities));
 			});
 			Accelerometer.setUpdateInterval(1000);
-			// Store the subscription for cleanup
+			return () => sub.remove(); // Proper cleanup
 		}
 
-		if (tempGyroEnable) {
+		if (tempGyroEnable && !Gyroscope.hasListeners()) {
 			const sub = Gyroscope.addListener(data => {
-				sendData(JSON.stringify(data));
+				minGyro.x = Math.min(minGyro.x, data.x);
+				minGyro.y = Math.min(minGyro.y, data.y);
+				minGyro.z = Math.min(minGyro.z, data.z);
+			
+				maxGyro.x = Math.max(maxGyro.x, data.x);
+				maxGyro.y = Math.max(maxGyro.y, data.y);
+				maxGyro.z = Math.max(maxGyro.z, data.z);
+			
+				capabilities.capabilities.input.gyro[0].min_value = [minGyro.x,minGyro.y,minGyro.z,];
+				capabilities.capabilities.input.gyro[0].max_value = [maxGyro.x,maxGyro.y,maxGyro.z,];
+
+				capabilities.capabilities.input.gyro[0].disabled = false;
+				// console.log(JSON.stringify(capabilities));
+				sendData(JSON.stringify(capabilities));
 			});
 			Gyroscope.setUpdateInterval(1000);
-			// Store the subscription for cleanup
+			return () => sub.remove();
 		}
 
 		// Handle camera separately
@@ -161,10 +156,6 @@ export default function GodotPage() {
 			stopCameraFeed();
 			console.log("stopcamerafeed called");
 		}
-
-		// Update all enabled states at the end
-		setIsAccelerometerEnabled(tempAccelEnable);
-		setIsGyroscopeEnabled(tempGyroEnable);
 	};
 
 	//Ed added this
@@ -339,7 +330,10 @@ export default function GodotPage() {
 							<Text style={styles.menuItemText}>Mobile Settings</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.menuItem} onPress={() => { }}>
+						<TouchableOpacity style={styles.menuItem} onPress={() => {
+							router.push('/connectivitySettings');
+							closeMenu();
+						}}>
 							<Ionicons name="wifi-outline" size={24} color="white" />
 							<Text style={styles.menuItemText}>Connectivity</Text>
 						</TouchableOpacity>
@@ -441,7 +435,7 @@ export default function GodotPage() {
 									style={styles.cancelButton}
 									onPress={() => {
 										cancelSensoryData();
-										setMobileSettingsModalVisible(false);
+										// setMobileSettingsModalVisible(false);
 									}}>
 									<Text style={styles.buttonText}>Cancel</Text>
 								</TouchableOpacity>
@@ -449,7 +443,7 @@ export default function GodotPage() {
 									style={styles.applyButton}
 									onPress={() => {
 										updateSensoryData();
-										setMobileSettingsModalVisible(false);
+										// setMobileSettingsModalVisible(false);
 									}}>
 									<Text style={styles.buttonText}>Apply</Text>
 								</TouchableOpacity>
