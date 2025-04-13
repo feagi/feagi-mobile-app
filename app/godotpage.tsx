@@ -8,7 +8,7 @@ import HelpModal from "./helpModal"; // Import the help
 
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import { Switch, GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Camera, CameraType } from 'expo-camera';
+import { Camera, CameraType, CameraView } from 'expo-camera';
 import { sendData, initializeSocket } from './websocket';
 import { Dimensions } from 'react-native';
 import capabilities from '../constants/capabilities.js';
@@ -39,7 +39,7 @@ export default function GodotPage() {
 	const [lastFrame, setLastFrame] = useState<string | null>(null);
 
 	const [isCameraMounted, setIsCameraMounted] = useState(false);
-
+	const [facing, setFacing] = useState<CameraType>('back');
 
 
 	//other
@@ -84,7 +84,7 @@ export default function GodotPage() {
 	// 	}
 	// }
 
-	const updateSensoryData = () => {
+	const updateSensoryData = async() => {
 		setIsAccelerometerEnabled(tempAccelEnable);
 		setIsGyroscopeEnabled(tempGyroEnable);
 		setIsCameraEnabled(tempCameraEnable);
@@ -466,28 +466,9 @@ export default function GodotPage() {
 
 
 						{isCameraEnabled && permission?.granted && (
-							// console.log("got to the isCameraEnabled && permission?.granted && part");//this wasnt running
-							//it was a race condition
-							
-								<Camera
-									ref={cameraRef}
-									style={styles.cameraPreview}
-									type={'back'}
-									onCameraReady={() => 
-										{console.log("Camera ready");
-										setIsCameraMounted(true);
-										startCameraFeed();
-										}
-									}
-
-									onMountError={(error) => {
-										console.error("Camera failed to mount:", error);
-										setIsCameraEnabled(false);
-										setTempCameraEnable(false);
-										setIsCameraMounted(false);
-									}}
-								/>
-							)}
+							<CameraView style={styles.cameraPreview} facing={facing}>
+								</CameraView>
+						)}
 
 						<WebView
 							//source={require("../assets/feagi/index.html")}
