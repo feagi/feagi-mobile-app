@@ -165,13 +165,17 @@ export default function GodotPage() {
 		try {
 			console.log("started camera feed");
 		  // Start frame capture interval
+		  let frameCount = 0;
+		  let targetFPS = 10; // Start conservative
+
+
 		  const frameInterval = setInterval(async () => {
 			if (cameraRef.current) {
 			  try {
 				// Capture frame
 				const photo = await cameraRef.current.takePictureAsync({
-				  quality: 0.7,
-				  base64: true,
+					quality: Math.max(0.3, 0.7 - (frameCount % 10 * 0.05)), // Dynamic quality
+					base64: true,
 				  skipProcessing: true
 				});
 	  
@@ -188,6 +192,9 @@ export default function GodotPage() {
 					gyroscope: minGyro
 				  }
 				};
+				if (frameCount % 30 === 0 && targetFPS < 30) {
+					targetFPS += 2;
+				  }
 	  
 				// Send via WebSocket
 				sendData(JSON.stringify(combinedData));
