@@ -40,7 +40,7 @@ export default function GodotPage() {
 
 	const [isCameraMounted, setIsCameraMounted] = useState(false);
 	const [facing, setFacing] = useState<CameraType>('back');
-	const [frameIntervalId, setFrameIntervalId] = useState<NodeJS.Timeout|null>(null);
+	const [frameIntervalId, setFrameIntervalId] = useState<NodeJS.Timeout | null>(null);
 
 
 	//other
@@ -85,7 +85,7 @@ export default function GodotPage() {
 	// 	}
 	// }
 
-	const updateSensoryData = async() => {
+	const updateSensoryData = async () => {
 		setIsAccelerometerEnabled(tempAccelEnable);
 		setIsGyroscopeEnabled(tempGyroEnable);
 		setIsCameraEnabled(tempCameraEnable);
@@ -105,8 +105,8 @@ export default function GodotPage() {
 				maxAccel.y = Math.max(maxAccel.y, data.y);
 				maxAccel.z = Math.max(maxAccel.z, data.z);
 
-				capabilities.capabilities.input.accelerometer[0].min_value = [minAccel.x,minAccel.y,minAccel.z,];
-				capabilities.capabilities.input.accelerometer[0].max_value = [maxAccel.x,maxAccel.y,maxAccel.z,];
+				capabilities.capabilities.input.accelerometer[0].min_value = [minAccel.x, minAccel.y, minAccel.z,];
+				capabilities.capabilities.input.accelerometer[0].max_value = [maxAccel.x, maxAccel.y, maxAccel.z,];
 
 				capabilities.capabilities.input.accelerometer[0].disabled = false;
 				// console.log(JSON.stringify(capabilities));
@@ -121,13 +121,13 @@ export default function GodotPage() {
 				minGyro.x = Math.min(minGyro.x, data.x);
 				minGyro.y = Math.min(minGyro.y, data.y);
 				minGyro.z = Math.min(minGyro.z, data.z);
-			
+
 				maxGyro.x = Math.max(maxGyro.x, data.x);
 				maxGyro.y = Math.max(maxGyro.y, data.y);
 				maxGyro.z = Math.max(maxGyro.z, data.z);
-			
-				capabilities.capabilities.input.gyro[0].min_value = [minGyro.x,minGyro.y,minGyro.z,];
-				capabilities.capabilities.input.gyro[0].max_value = [maxGyro.x,maxGyro.y,maxGyro.z,];
+
+				capabilities.capabilities.input.gyro[0].min_value = [minGyro.x, minGyro.y, minGyro.z,];
+				capabilities.capabilities.input.gyro[0].max_value = [maxGyro.x, maxGyro.y, maxGyro.z,];
 
 				capabilities.capabilities.input.gyro[0].disabled = false;
 				// console.log(JSON.stringify(capabilities));
@@ -140,93 +140,38 @@ export default function GodotPage() {
 		// Handle camera separately
 		if (tempCameraEnable) {
 			try {
-			  const { status } = await Camera.requestCameraPermissionsAsync();
-			//   console.log("Camera permission status:", status);
-			  setPermission({ status, granted: status === 'granted' });
-			  
-			  // Only set camera enabled if permission was just granted
-			  if (status === "granted") {
-				setIsCameraEnabled(true);  // Directly set to true
-				console.log("status is set to granted");
-				startCameraFeed();
-			  }
+				const { status } = await Camera.requestCameraPermissionsAsync();
+				if (status === "granted") {
+					setIsCameraEnabled(true);
+					capabilities.capabilities.input.camera[0].disabled = false;
+
+					// Optional: Update camera parameters if needed
+					capabilities.capabilities.input.camera[0].threshold_default = 50; // Example
+					capabilities.capabilities.input.camera[0].mirror = false;
+
+					sendData(JSON.stringify(capabilities));
+				}
 			} catch (error) {
-			  console.error("Camera permission error:", error);
-			  setTempCameraEnable(false);
+				console.error("Camera error:", error);
+				capabilities.capabilities.input.camera[0].disabled = true;
+				sendData(JSON.stringify(capabilities));
 			}
-		  } else {
-			stopCameraFeed();
-			console.log("stopcamerafeed called");
+		} else {
+			capabilities.capabilities.input.camera[0].disabled = true;
+			sendData(JSON.stringify(capabilities));
 		}
 	};
 
 	//Ed added this
-	const startCameraFeed = async () => {
-		try {
-			console.log("started camera feed");
-		  // Start frame capture interval
-		  let frameCount = 0;
-		  let targetFPS = 10; // Start conservative
-
-
-		  const frameInterval = setInterval(async () => {
-			if (cameraRef.current) {
-			  try {
-				// Capture frame
-				const photo = await cameraRef.current.takePictureAsync({
-					quality: Math.max(0.3, 0.7 - (frameCount % 10 * 0.05)), // Dynamic quality
-					base64: true,
-				  skipProcessing: true
-				});
-	  
-				// Combine with other sensor data
-				const combinedData = {
-				  timestamp: Date.now(),
-				  camera: {
-					frame: photo.base64,
-					width: photo.width,
-					height: photo.height
-				  },
-				  sensors: {
-					accelerometer: minAccel, // Your existing min/max values
-					gyroscope: minGyro
-				  }
-				};
-				if (frameCount % 30 === 0 && targetFPS < 30) {
-					targetFPS += 2;
-				  }
-	  
-				// Send via WebSocket
-				sendData(JSON.stringify(combinedData));
-				
-			  } catch (error) {
-				console.error("Frame capture error:", error);
-			  }
-			}
-		  }, 100); // 10fps (adjust as needed)
-	  
-		  setFrameIntervalId(frameInterval);
-		  
-		  // Notify FEAGI camera is active
-		  sendData(JSON.stringify({
-			type: 'camera_control',
-			status: 'activated',
-			timestamp: Date.now()
-		  }));
-	  
-		} catch (error) {
-		  console.error("Camera feed start error:", error);
-		}
-	  };
+	//removed start camerafeed
 
 	const stopCameraFeed = () => {
 		setIsCameraEnabled(false);
-		setIsCameraMounted(false); 
-		sendData(JSON.stringify({
-			type: 'camera_control',
-			status: 'deactivated',
-			timestamp: Date.now()
-		}));
+		setIsCameraMounted(false);
+
+		// Update capabilities (consistent with accelerometer/gyro approach)
+		capabilities.capabilities.input.camera[0].disabled = true;
+		sendData(JSON.stringify(capabilities));
 	};
 
 	const cancelSensoryData = () => {
@@ -516,7 +461,7 @@ export default function GodotPage() {
 
 						{isCameraEnabled && permission?.granted && (
 							<CameraView style={styles.cameraPreview} facing={facing}>
-								</CameraView>
+							</CameraView>
 						)}
 
 						<WebView
