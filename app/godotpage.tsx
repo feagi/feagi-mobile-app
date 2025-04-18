@@ -155,6 +155,7 @@ export default function GodotPage() {
 					capabilities.capabilities.input.camera[0].mirror = false;
 
 					sendData(JSON.stringify(capabilities));
+					startCameraFeed(); 
 				}
 			} catch (error) {
 				console.error("Camera error:", error);
@@ -169,6 +170,27 @@ export default function GodotPage() {
 
 	//Ed added this
 	//removed start camerafeed
+	const startCameraFeed = async () => {
+		const frameInterval = setInterval(async () => {
+		  if (cameraRef.current) {
+			const photo = await cameraRef.current.takePictureAsync({
+			  quality: 0.7,
+			  base64: true,
+			  skipProcessing: true
+			});
+			
+			sendData(JSON.stringify({
+			  type: 'camera_frame',
+			  data: photo.base64,
+			  width: photo.width,
+			  height: photo.height,
+			  timestamp: Date.now()
+			}));
+		  }
+		}, 100); // 10fps
+		
+		setFrameIntervalId(frameInterval);
+	  };
 
 	const stopCameraFeed = () => {
 		setIsCameraEnabled(false);
