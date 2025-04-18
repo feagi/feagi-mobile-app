@@ -163,7 +163,7 @@ export default function GodotPage() {
 			}
 		} else {
 			capabilities.capabilities.input.camera[0].disabled = true;
-			sendData(JSON.stringify(capabilities));
+			stopCameraFeed();
 		}
 	};
 
