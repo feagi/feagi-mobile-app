@@ -178,7 +178,7 @@ export default function GodotPage() {
 			  base64: true,
 			  skipProcessing: true
 			});
-			
+			console.log("sending camera frame");
 			sendData(JSON.stringify({
 			  type: 'camera_frame',
 			  data: photo.base64,
