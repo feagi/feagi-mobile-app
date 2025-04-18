@@ -1,58 +1,71 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 let webSocket: WebSocket;
 let magicLink;
 
+const statusCodes: Record<number, string> = {
+  0: "CONNECTING",
+  1: "OPEN",
+  2: "CLOSING",
+  3: "CLOSED",
+};
 
-export const initializeSocket = async () => {
-    try {
-        magicLink = await AsyncStorage.getItem('user');
-        if(!magicLink) {
-            console.log("could not get magic link");
-            return;
-        }
-        const url = magicLink.replace('https', 'ws');
-    
-        webSocket = new WebSocket(url);
-        
-        webSocket.onopen = () => {
-            console.log("connection opened");
-        
-        };
-        
-        webSocket.onmessage = (e) => {
-            console.log('message from server: ', e.data);
-        
-        };
-        
-        webSocket.onerror = (e) => {
-            console.log('error: ', e);
-        };
-        
-        webSocket.onclose = () => {
-            console.log('websocket closed');
-        };
-        
-        return () => {
-            webSocket.close();
-        }
-    } catch {
-        console.log("could not get magic link");
+export const initializeSocket = async (capabilities) => {
+  try {
+    magicLink = await AsyncStorage.getItem("user");
+    if (!magicLink) {
+      console.error("could not get magic link from AsyncStorage");
+      return;
     }
 
+    const url = magicLink.replace("https", "wss");
+
+    webSocket = new WebSocket(`${url}/p9051`);
+
+    console.log("websocket initialized with url:", `${url}/p9051`);
+
+    webSocket.onopen = () => {
+      console.log("connection opened");
+      if (webSocket.readyState === WebSocket.OPEN) {
+        console.log("sending capabilities");
+        webSocket.send(JSON.stringify(capabilities));
+      }
+    };
+
+    webSocket.onmessage = (e) => {
+      console.log("message from server: ", e.data);
+    };
+
+    webSocket.onerror = (e) => {
+      console.log("error: ", e);
+    };
+
+    webSocket.onclose = () => {
+      console.log("websocket closed");
+    };
+
+    return () => {
+      webSocket.close();
+    };
+  } catch {
+    console.log("could not get magic link");
+  }
 };
 
 export const sendData = (data: string) => {
-    if (webSocket && webSocket.OPEN) {
-        webSocket.send(data);
-    }
-    else {
-        console.log('cannot send data as url was not given');
-    }
-}
+  if (!webSocket) {
+    console.error("websocket is not initialized");
+    return;
+  }
 
+  if (webSocket.readyState !== WebSocket.OPEN) {
+    console.error(
+      "cannot send data as websocket is not open. readyState: ",
+      statusCodes[webSocket.readyState]
+    );
+    return;
+  }
 
-    
-    
-    
-
+  console.log("sending data: ", data);
+  webSocket.send(data);
+};
