@@ -37,6 +37,11 @@ const ConnectivitySettings: React.FC = () => {
     setApiResponse('Connecting...');
 
     try {
+      // Clear existing data before setting new API key
+      await AsyncStorage.getAllKeys().then(keys => {
+        AsyncStorage.multiRemove(keys);
+      });
+
       console.log("https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=" + api);
       const response = await fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=' + api);
 
@@ -81,6 +86,23 @@ const ConnectivitySettings: React.FC = () => {
     }
   };
 
+  // Delete all AsyncStorage keys
+  const deleteKeys = () => {
+    AsyncStorage.getAllKeys((err, keys) => {
+      AsyncStorage.multiGet(keys, (err, stores) => {
+        stores.map((result, i, store) => {
+          // get at each store's key/value so you can work with it
+          console.log("deleting: ");
+          let key = store[i][0];
+          let value = store[i][1];
+          console.log("key: " + key + " Value: " + value);
+          AsyncStorage.removeItem(key);
+        });
+      });
+    });
+    console.log('Success', 'All stored data deleted successfully');
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Network Configuration</Text>
@@ -107,6 +129,13 @@ const ConnectivitySettings: React.FC = () => {
         disabled={isLoading}
       >
         <Text style={styles.buttonText}>Connect</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.deleteKeysButton}
+        onPress={deleteKeys}
+      >
+        <Text style={styles.deleteButtonText}>Delete Key</Text>
       </TouchableOpacity>
 
       {magicLink ? (
@@ -182,11 +211,27 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 3,
     borderColor: '#2e3133',
-    marginBottom: 50,
+    marginBottom: 10,
   },
   buttonText: {
-    color: '0A1A3A',
+    color: '#0A1A3A',
     fontSize: 20,
+    fontWeight: '700'
+  },
+  deleteKeysButton: {
+    height: 50,
+    width: 200,
+    backgroundColor: '#FF6347',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    borderWidth: 3,
+    borderColor: '#2e3133',
+    marginBottom: 20,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 18,
     fontWeight: '700'
   },
   info: {
