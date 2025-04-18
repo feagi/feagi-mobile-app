@@ -1,4 +1,6 @@
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Dimensions,
   Text,
   View,
   StyleSheet,
@@ -7,43 +9,41 @@ import {
   Animated,
   Modal,
 } from "react-native";
-import { router } from "expo-router";
 import WebView from "react-native-webview";
-import React, { useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
-import HelpModal from "./helpModal"; // Import the help
-
-import { Accelerometer, Gyroscope } from "expo-sensors";
 import { Switch, GestureHandlerRootView } from "react-native-gesture-handler";
+import { router } from "expo-router";
 import { useCameraPermissions } from "expo-camera";
-import { sendData, initializeSocket } from "./websocket";
-import { Dimensions } from "react-native";
+import { Accelerometer, Gyroscope } from "expo-sensors";
+import { Ionicons } from "@expo/vector-icons";
 import capabilities from "../constants/capabilities.js";
+import HelpModal from "./helpModal";
+import { WebSocketManager } from "./websocket";
 
 export default function GodotPage() {
   const [godot, onGodotChange] = useState("");
-  const [menuVisible, setMenuVisible] = useState(false); // state for hamburger menu drop down
+  const [menuVisible, setMenuVisible] = useState(false); // hamburger menu
   const slideAnim = useRef(new Animated.Value(-250)).current; // Animation for sliding menu
   const [mobileSettingsModalVisible, setMobileSettingsModalVisible] =
     useState(false);
+  const [currentOrientation, setCurrentOrientation] = useState("portrait");
+  // gyro / accelerometer
   const [isAccelerometerEnabled, setIsAccelerometerEnabled] = useState(false);
   const [isGyroscopeEnabled, setIsGyroscopeEnabled] = useState(false);
-  let minAccel = { x: Infinity, y: Infinity, z: Infinity };
-  let maxAccel = { x: -Infinity, y: -Infinity, z: -Infinity };
-  let minGyro = { x: Infinity, y: Infinity, z: Infinity };
-  let maxGyro = { x: -Infinity, y: -Infinity, z: -Infinity };
-  //camera
+  const [tempAccelEnable, setTempAccelEnable] = useState(false);
+  const [tempGyroEnable, setTempGyroEnable] = useState(false);
+  // let minAccel = { x: Infinity, y: Infinity, z: Infinity };
+  // let maxAccel = { x: -Infinity, y: -Infinity, z: -Infinity };
+  // let minGyro = { x: Infinity, y: Infinity, z: Infinity };
+  // let maxGyro = { x: -Infinity, y: -Infinity, z: -Infinity };
+  // camera
   const [isCameraEnabled, setIsCameraEnabled] = useState(false);
   const [tempCameraEnable, setTempCameraEnable] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
+  // websocket
+  const wsMgr = useRef<WebSocketManager | null>(null);
 
-  //other
-  const [tempAccelEnable, setTempAccelEnable] = useState(false);
-  const [tempGyroEnable, setTempGyroEnable] = useState(false);
-
-  const [currentOrientation, setCurrentOrientation] = useState("portrait");
-
+  // Landscape / portrait orientation
   useEffect(() => {
     // Detect initial orientation
     const { width, height } = Dimensions.get("window");
@@ -78,13 +78,6 @@ export default function GodotPage() {
   //     console.log("initializing socket");
   //   }, []);
 
-  // useEffect(() => {
-  // 	if (isAccelerometerEnabled || isGyroscopeEnabled || isCameraEnabled) {
-  // 		console.log(JSON.stringify(capabilities));
-  // 		sendData(JSON.stringify(capabilities));
-  // 	}
-  // }, [isAccelerometerEnabled, isGyroscopeEnabled, isCameraEnabled]);
-
   // const handleAccelPermission = async () => {
   // 	const { status: permissionStatus } = await Accelerometer.requestPermissionsAsync();
   // 	if (permissionStatus === 'granted') {
@@ -93,89 +86,85 @@ export default function GodotPage() {
   // }
   //
 
-  const updateSensoryData = () => {
-    setIsAccelerometerEnabled(tempAccelEnable);
-    setIsGyroscopeEnabled(tempGyroEnable);
-    setIsCameraEnabled(tempCameraEnable);
-    initializeSocket(capabilities);
-    if (tempAccelEnable && !Accelerometer.hasListeners()) {
-      Accelerometer.setUpdateInterval(1000);
-      console.log("set update interval");
-      Accelerometer.addListener((data) => {
-        console.log("adding listeners");
-        // minAccel.x = Math.min(minAccel.x, data.x);
-        // minAccel.y = Math.min(minAccel.y, data.y);
-        // minAccel.z = Math.min(minAccel.z, data.z);
+  // const updateCapabilities = (type: string, data) => {
+  //   minGyro.x = Math.min(minGyro.x, data.x);
+  //   minGyro.y = Math.min(minGyro.y, data.y);
+  //   minGyro.z = Math.min(minGyro.z, data.z);
 
-        // maxAccel.x = Math.max(maxAccel.x, data.x);
-        // maxAccel.y = Math.max(maxAccel.y, data.y);
-        // maxAccel.z = Math.max(maxAccel.z, data.z);
+  //   maxGyro.x = Math.max(maxGyro.x, data.x);
+  //   maxGyro.y = Math.max(maxGyro.y, data.y);
+  //   maxGyro.z = Math.max(maxGyro.z, data.z);
 
-        // capabilities.capabilities.input.accelerometer[0].min_value = [
-        //   minAccel.x,
-        //   minAccel.y,
-        //   minAccel.z,
-        // ];
-        // capabilities.capabilities.input.accelerometer[0].max_value = [
-        //   maxAccel.x,
-        //   maxAccel.y,
-        //   maxAccel.z,
-        // ];
+  //   if (type === "gyro") {
+  //     //   capabilities.capabilities.input.gyro[0].min_value = [
+  //     //     minGyro.x,
+  //     //     minGyro.y,
+  //     //     minGyro.z,
+  //     //   ];
+  //     //   capabilities.capabilities.input.gyro[0].max_value = [
+  //     //     maxGyro.x,
+  //     //     maxGyro.y,
+  //     //     maxGyro.z,
+  //     //   ];
+  //   } else {
+  //     // capabilities.capabilities.input.accelerometer[0].min_value = [
+  //     //   minAccel.x,
+  //     //   minAccel.y,
+  //     //   minAccel.z,
+  //     // ];
+  //     // capabilities.capabilities.input.accelerometer[0].max_value = [
+  //     //   maxAccel.x,
+  //     //   maxAccel.y,
+  //     //   maxAccel.z,
+  //     // ];
+  //   }
+  // };
 
-        capabilities.capabilities.input.accelerometer[0].disabled = false;
-        // console.log(JSON.stringify(capabilities));
-        // console.log("sending data");
-        // sendData(JSON.stringify(capabilities));
-        // console.log("sent data");
-      });
-      console.log("past listener adding");
-      // return () => sub.remove(); // Proper cleanup
+  useEffect(() => {
+    async function letsGetItStarted() {
+      if (isAccelerometerEnabled || isGyroscopeEnabled || isCameraEnabled) {
+        console.log("initializing ws");
+        if (!wsMgr.current) wsMgr.current = new WebSocketManager(capabilities);
+        await wsMgr.current.initialize();
+      }
     }
-    if (!tempAccelEnable && Accelerometer.hasListeners()) {
+
+    letsGetItStarted();
+
+    if (isAccelerometerEnabled && !Accelerometer.hasListeners()) {
+      Accelerometer.setUpdateInterval(1000);
+      capabilities.capabilities.input.accelerometer[0].disabled = false;
+
+      Accelerometer.addListener((data) => {
+        console.log("ACCELEROMETER DATA:", data);
+        // send via ws
+        if (wsMgr.current)
+          wsMgr.current.send(JSON.stringify({ type: "accelerometer", data }));
+      });
+
+      // return () => sub.remove(); // Proper cleanup
+    } else if (!isAccelerometerEnabled && Accelerometer.hasListeners()) {
       Accelerometer.removeAllListeners();
       capabilities.capabilities.input.accelerometer[0].disabled = true;
     }
-    // } else if (tempAccelEnable && !hasAccelerometerPermission) {
-    // 	handleAccelPermission();
-    //} //else {
-    // Accelerometer.removeAllListeners();
-    // console.log(Accelerometer);
+    // else if (!isAccelerometerEnabled && !hasAccelerometerPermission) {
+    // handleAccelPermission();
+    // }
 
-    if (tempGyroEnable && !Gyroscope.hasListeners()) {
-      // const sub = Gyroscope.addListener((data) => {
-      //   minGyro.x = Math.min(minGyro.x, data.x);
-      //   minGyro.y = Math.min(minGyro.y, data.y);
-      //   minGyro.z = Math.min(minGyro.z, data.z);
-
-      //   maxGyro.x = Math.max(maxGyro.x, data.x);
-      //   maxGyro.y = Math.max(maxGyro.y, data.y);
-      //   maxGyro.z = Math.max(maxGyro.z, data.z);
-
-      //   capabilities.capabilities.input.gyro[0].min_value = [
-      //     minGyro.x,
-      //     minGyro.y,
-      //     minGyro.z,
-      //   ];
-      //   capabilities.capabilities.input.gyro[0].max_value = [
-      //     maxGyro.x,
-      //     maxGyro.y,
-      //     maxGyro.z,
-      //   ];
-
-      //   capabilities.capabilities.input.gyro[0].disabled = false;
-      //   // console.log(JSON.stringify(capabilities));
-      //   sendData(JSON.stringify(capabilities));
-      // });
+    if (isGyroscopeEnabled && !Gyroscope.hasListeners()) {
       Gyroscope.setUpdateInterval(1000);
-      // return () => sub.remove();
-    }
-    if (!tempGyroEnable && Gyroscope.hasListeners()) {
+      capabilities.capabilities.input.gyro[0].disabled = false;
+
+      Gyroscope.addListener((data) => {
+        console.log("GYROSCOPE DATA:", data);
+        // send via ws
+      });
+    } else if (!isGyroscopeEnabled && Gyroscope.hasListeners()) {
       Gyroscope.removeAllListeners();
       capabilities.capabilities.input.gyro[0].disabled = true;
     }
-    // console.log(Gyroscope);
 
-    if (tempCameraEnable) {
+    if (isCameraEnabled) {
       if (!permission?.granted) {
         requestPermission().then(({ granted }) => {
           if (granted) {
@@ -190,35 +179,42 @@ export default function GodotPage() {
     } else {
       stopCameraFeed();
     }
+  }, [isAccelerometerEnabled, isGyroscopeEnabled, isCameraEnabled]);
+
+  const updateSensoryData = () => {
+    setIsAccelerometerEnabled(tempAccelEnable);
+    setIsGyroscopeEnabled(tempGyroEnable);
+    setIsCameraEnabled(tempCameraEnable);
   };
 
   // Ed added this
   const startCameraFeed = () => {
     setIsCameraEnabled(true);
-    sendData(
-      JSON.stringify({
-        type: "camera_control",
-        status: "activated",
-        timestamp: Date.now(),
-      })
-    );
+    // sendData(
+    //   JSON.stringify({
+    //     type: "camera_control",
+    //     status: "activated",
+    //     timestamp: Date.now(),
+    //   })
+    // );
   };
 
   const stopCameraFeed = () => {
     setIsCameraEnabled(false);
-    sendData(
-      JSON.stringify({
-        type: "camera_control",
-        status: "deactivated",
-        timestamp: Date.now(),
-      })
-    );
+    // sendData(
+    //   JSON.stringify({
+    //     type: "camera_control",
+    //     status: "deactivated",
+    //     timestamp: Date.now(),
+    //   })
+    // );
   };
 
   const cancelSensoryData = () => {
     setTempAccelEnable(isAccelerometerEnabled);
     setTempGyroEnable(isGyroscopeEnabled);
     setTempCameraEnable(isCameraEnabled);
+    setMobileSettingsModalVisible(false);
   };
 
   const [helpModalVisible, setHelpModalVisible] = useState(false); // State for Help Modal
@@ -255,30 +251,20 @@ export default function GodotPage() {
     }
   };
 
-  const plugGodot = async () => {
-    const value = await AsyncStorage.getItem("user");
-
-    //AsyncStorage.getAllKeys((err, keys) => {
-    //AsyncStorage.multiGet(keys, (err, stores) => {
-    //stores.map((result, i, store) => {
-    // get at each store's key/value so you can work with it
-
-    const concatLink = value?.slice(8);
-    const wssLink = value?.replace("https", "wss");
-    const godotLink = `https://storage.googleapis.com/nrs_brain_visualizer/1738016771/index.html?ip_address=${concatLink}&port_disabled=true&websocket_url=${wssLink}/p9055&http_type=HTTPS://`;
-    console.log("godotLink: " + godotLink);
-    onGodotChange(godotLink);
-    //https://user-pmcmwytxjfjfvjncvjkb-feagi.feagi-k8s-production.neurorobotics.studio
-    //"https://storage.googleapis.com/nrs_brain_visualizer/1738016771/index.html?ip_address=user-tcdxbrjxezbxvslzratc-feagi.feagi-k8s-production.neurorobotics.studio&port_disabled=true&websocket_url=wss://user-tcdxbrjxezbxvslzratc-feagi.feagi-k8s-production.neurorobotics.studio/p9055&http_type=HTTPS://",
-
-    //return godotLink;
-
-    //		});
-    //	});
-    //});
-  };
-
   useEffect(() => {
+    const plugGodot = async () => {
+      // AsyncStorage.getAllKeys((err, keys) => {
+      // AsyncStorage.multiGet(keys, (err, stores) => {
+      // stores.map((result, i, store) => {
+      // get at each store's key/value so you can work with it
+      const value = await AsyncStorage.getItem("user");
+      const concatLink = value?.slice(8);
+      const wssLink = value?.replace("https", "wss");
+      const godotLink = `https://storage.googleapis.com/nrs_brain_visualizer/1738016771/index.html?ip_address=${concatLink}&port_disabled=true&websocket_url=${wssLink}/p9055&http_type=HTTPS://`;
+      console.log("godotLink: " + godotLink);
+      onGodotChange(godotLink);
+    };
+
     plugGodot();
   }, []);
 
@@ -478,7 +464,13 @@ export default function GodotPage() {
           <View style={{ height: 600 }}>
             {/* Hamburger Menu Button */}
             <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
-              <Ionicons name="menu" size={32} color="black" />
+              <Ionicons
+                name="menu"
+                size={32}
+                color="black"
+                backgroundColor="white"
+                borderRadius={5}
+              />
             </TouchableOpacity>
 
             <WebView
