@@ -39,7 +39,7 @@ export default function GodotPage() {
 	const [lastFrame, setLastFrame] = useState<string | null>(null);
 
 	const [isCameraMounted, setIsCameraMounted] = useState(false);
-	const [facing, setFacing] = useState<CameraType>('back');
+	const [facing, setFacing] = useState<CameraType>('front');
 	const [frameIntervalId, setFrameIntervalId] = useState<NodeJS.Timeout | null>(null);
 
 
@@ -84,6 +84,11 @@ export default function GodotPage() {
 	// 		setHasAccelerometerPermission(true);
 	// 	}
 	// }
+
+	const flipCamera = () => {
+		setFacing(current => (current === 'back' ? 'front' : 'back'));
+	};
+
 
 	const updateSensoryData = async () => {
 		setIsAccelerometerEnabled(tempAccelEnable);
@@ -458,11 +463,22 @@ export default function GodotPage() {
 
 
 
-
-						{isCameraEnabled && permission?.granted && (
-							<CameraView style={styles.cameraPreview} facing={facing}>
+						
+						{isCameraEnabled && permission?.granted && (	
+							<CameraView style={styles.cameraPreview} 
+							facing={facing}
+							// camera
+							ref={cameraRef}>
+								<TouchableOpacity
+										style={styles.flipButton}
+										onPress={flipCamera}
+									>
+										<Ionicons name="camera-reverse" size={24} color="white" />
+									</TouchableOpacity>
 							</CameraView>
-						)}
+						)} 
+					
+						
 
 						<WebView
 							//source={require("../assets/feagi/index.html")}
@@ -550,6 +566,14 @@ const styles = StyleSheet.create({
 		borderWidth: 2,
 		borderColor: 'white'
 	},//this is for camera
+	flipButton: {
+		position: 'absolute',
+		bottom: 5,
+		right: 5,
+		backgroundColor: 'rgba(0,0,0,0.5)',
+		borderRadius: 20,
+		padding: 5
+	  },
 	button: {
 		position: 'absolute', // Position the button absolutely
 		bottom: 20, // Distance from the bottom of the screen
