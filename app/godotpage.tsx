@@ -169,49 +169,56 @@ export default function GodotPage() {
 	const startCameraFeed = async () => {
 		try {
 			console.log("started camera feed");
-			// Start frame capture interval
-			const frameInterval = setInterval(async () => {
-				if (cameraRef.current) {
-					try {
-						// Capture frame
-						const photo = await cameraRef.current.takePictureAsync({
-							quality: 0.7,
-							base64: true,
-							skipProcessing: true
-						});
+		  // Start frame capture interval
+		  let frameCount = 0;
+		  let targetFPS = 10; // Start conservative
 
-						// Combine with other sensor data
-						const combinedData = {
-							timestamp: Date.now(),
-							camera: {
-								frame: photo.base64,
-								width: photo.width,
-								height: photo.height
-							},
-							sensors: {
-								accelerometer: minAccel, // Your existing min/max values
-								gyroscope: minGyro
-							}
-						};
 
-						// Send via WebSocket
-						sendData(JSON.stringify(combinedData));
-
-					} catch (error) {
-						console.error("Frame capture error:", error);
-					}
-				}
-			}, 100); // 10fps (adjust as needed)
-
-			setFrameIntervalId(frameInterval);
-
-			// Notify FEAGI camera is active
-			sendData(JSON.stringify({
-				type: 'camera_control',
-				status: 'activated',
-				timestamp: Date.now()
-			}));
-
+		  const frameInterval = setInterval(async () => {
+			if (cameraRef.current) {
+			  try {
+				// Capture frame
+				const photo = await cameraRef.current.takePictureAsync({
+					quality: Math.max(0.3, 0.7 - (frameCount % 10 * 0.05)), // Dynamic quality
+					base64: true,
+				  skipProcessing: true
+				});
+	  
+				// Combine with other sensor data
+				const combinedData = {
+				  timestamp: Date.now(),
+				  camera: {
+					frame: photo.base64,
+					width: photo.width,
+					height: photo.height
+				  },
+				  sensors: {
+					accelerometer: minAccel, // Your existing min/max values
+					gyroscope: minGyro
+				  }
+				};
+				if (frameCount % 30 === 0 && targetFPS < 30) {
+					targetFPS += 2;
+				  }
+	  
+				// Send via WebSocket
+				sendData(JSON.stringify(combinedData));
+				
+			  } catch (error) {
+				console.error("Frame capture error:", error);
+			  }
+			}
+		  }, 100); // 10fps (adjust as needed)
+	  
+		  setFrameIntervalId(frameInterval);
+		  
+		  // Notify FEAGI camera is active
+		  sendData(JSON.stringify({
+			type: 'camera_control',
+			status: 'activated',
+			timestamp: Date.now()
+		  }));
+	  
 		} catch (error) {
 			console.error("Camera feed start error:", error);
 		}
