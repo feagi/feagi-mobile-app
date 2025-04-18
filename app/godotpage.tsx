@@ -518,11 +518,11 @@ export default function GodotPage() {
 
 
 
-
-						{isCameraEnabled && permission?.granted && (
+						
+						{isCameraEnabled && permission?.granted && (	
 							<CameraView style={styles.cameraPreview} 
 							facing={facing}
-							
+							// camera
 							ref={cameraRef}>
 								<TouchableOpacity
 										style={styles.flipButton}
@@ -531,8 +531,8 @@ export default function GodotPage() {
 										<Ionicons name="camera-reverse" size={24} color="white" />
 									</TouchableOpacity>
 							</CameraView>
-						)}
-
+						)} 
+					
 						
 
 						<WebView
