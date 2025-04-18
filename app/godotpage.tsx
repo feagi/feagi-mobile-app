@@ -103,30 +103,30 @@ export default function GodotPage() {
       console.log("set update interval");
       Accelerometer.addListener((data) => {
         console.log("adding listeners");
-        minAccel.x = Math.min(minAccel.x, data.x);
-        minAccel.y = Math.min(minAccel.y, data.y);
-        minAccel.z = Math.min(minAccel.z, data.z);
+        // minAccel.x = Math.min(minAccel.x, data.x);
+        // minAccel.y = Math.min(minAccel.y, data.y);
+        // minAccel.z = Math.min(minAccel.z, data.z);
 
-        maxAccel.x = Math.max(maxAccel.x, data.x);
-        maxAccel.y = Math.max(maxAccel.y, data.y);
-        maxAccel.z = Math.max(maxAccel.z, data.z);
+        // maxAccel.x = Math.max(maxAccel.x, data.x);
+        // maxAccel.y = Math.max(maxAccel.y, data.y);
+        // maxAccel.z = Math.max(maxAccel.z, data.z);
 
-        capabilities.capabilities.input.accelerometer[0].min_value = [
-          minAccel.x,
-          minAccel.y,
-          minAccel.z,
-        ];
-        capabilities.capabilities.input.accelerometer[0].max_value = [
-          maxAccel.x,
-          maxAccel.y,
-          maxAccel.z,
-        ];
+        // capabilities.capabilities.input.accelerometer[0].min_value = [
+        //   minAccel.x,
+        //   minAccel.y,
+        //   minAccel.z,
+        // ];
+        // capabilities.capabilities.input.accelerometer[0].max_value = [
+        //   maxAccel.x,
+        //   maxAccel.y,
+        //   maxAccel.z,
+        // ];
 
         capabilities.capabilities.input.accelerometer[0].disabled = false;
         // console.log(JSON.stringify(capabilities));
-        console.log("sending data");
-        sendData(JSON.stringify(capabilities));
-        console.log("sent data");
+        // console.log("sending data");
+        // sendData(JSON.stringify(capabilities));
+        // console.log("sent data");
       });
       console.log("past listener adding");
       // return () => sub.remove(); // Proper cleanup
@@ -142,30 +142,30 @@ export default function GodotPage() {
     // console.log(Accelerometer);
 
     if (tempGyroEnable && !Gyroscope.hasListeners()) {
-      const sub = Gyroscope.addListener((data) => {
-        minGyro.x = Math.min(minGyro.x, data.x);
-        minGyro.y = Math.min(minGyro.y, data.y);
-        minGyro.z = Math.min(minGyro.z, data.z);
+      // const sub = Gyroscope.addListener((data) => {
+      //   minGyro.x = Math.min(minGyro.x, data.x);
+      //   minGyro.y = Math.min(minGyro.y, data.y);
+      //   minGyro.z = Math.min(minGyro.z, data.z);
 
-        maxGyro.x = Math.max(maxGyro.x, data.x);
-        maxGyro.y = Math.max(maxGyro.y, data.y);
-        maxGyro.z = Math.max(maxGyro.z, data.z);
+      //   maxGyro.x = Math.max(maxGyro.x, data.x);
+      //   maxGyro.y = Math.max(maxGyro.y, data.y);
+      //   maxGyro.z = Math.max(maxGyro.z, data.z);
 
-        capabilities.capabilities.input.gyro[0].min_value = [
-          minGyro.x,
-          minGyro.y,
-          minGyro.z,
-        ];
-        capabilities.capabilities.input.gyro[0].max_value = [
-          maxGyro.x,
-          maxGyro.y,
-          maxGyro.z,
-        ];
+      //   capabilities.capabilities.input.gyro[0].min_value = [
+      //     minGyro.x,
+      //     minGyro.y,
+      //     minGyro.z,
+      //   ];
+      //   capabilities.capabilities.input.gyro[0].max_value = [
+      //     maxGyro.x,
+      //     maxGyro.y,
+      //     maxGyro.z,
+      //   ];
 
-        capabilities.capabilities.input.gyro[0].disabled = false;
-        // console.log(JSON.stringify(capabilities));
-        sendData(JSON.stringify(capabilities));
-      });
+      //   capabilities.capabilities.input.gyro[0].disabled = false;
+      //   // console.log(JSON.stringify(capabilities));
+      //   sendData(JSON.stringify(capabilities));
+      // });
       Gyroscope.setUpdateInterval(1000);
       // return () => sub.remove();
     }
@@ -192,7 +192,7 @@ export default function GodotPage() {
     }
   };
 
-  //Ed added this
+  // Ed added this
   const startCameraFeed = () => {
     setIsCameraEnabled(true);
     sendData(
@@ -439,7 +439,7 @@ export default function GodotPage() {
                 </View>
 
                 <View style={styles.settingItem}>
-                  <Text style={styles.settingLabel}>Mobile Accelerator</Text>
+                  <Text style={styles.settingLabel}>Mobile Accelerometer</Text>
                   <Switch
                     value={tempAccelEnable}
                     onValueChange={(value) => setTempAccelEnable(value)}

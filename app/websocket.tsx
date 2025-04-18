@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { compress, decompress } from "lz4js";
 let webSocket: WebSocket;
 let magicLink;
 
@@ -28,12 +28,14 @@ export const initializeSocket = async (capabilities) => {
       console.log("connection opened");
       if (webSocket.readyState === WebSocket.OPEN) {
         console.log("sending capabilities");
-        webSocket.send(JSON.stringify(capabilities));
+        const json = JSON.stringify(capabilities);
+        const buffer = new TextEncoder().encode(json);
+        webSocket.send(compress(buffer));
       }
     };
 
     webSocket.onmessage = (e) => {
-      console.log("message from server: ", e.data);
+      // console.log("message from server: ", e.data);
     };
 
     webSocket.onerror = (e) => {
