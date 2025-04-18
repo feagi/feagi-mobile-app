@@ -95,21 +95,21 @@ const CorticalPage = () => {
     // Add a control based on cortical area data
     const addControl = async (deviceName, dimensions, corticalId) => {
 
-		//4/10/25
-		/*
-			Whenever controls are addede they are added to a seperate async storage thing. At the beginning
-			of a load this async storage is looked at and whatever is in there is added to the sceren and
-			removed from available cortical areas. when its put back it is addded to async storage.
-			so
-			ON ADD CONTROL, ADD TO CORT 2
-			ON LOAD, ADD CORT 2 REMOVE FROM CORT 1 cool. add add Control should remove it from cort1 anyway
-			addCotrol(CORT2, remove CORT1)
-			just like 2 more async storage adds and an extra query per thing. not too bad
-			delete adds to cort1 removes from cort 2 does this help
-			SHOW ON SCREEN
-			IF REMOVED FROM SCREEN AD TO CORT1 REMOVE FROM 2
+        //4/10/25
+        /*
+            Whenever controls are addede they are added to a seperate async storage thing. At the beginning
+            of a load this async storage is looked at and whatever is in there is added to the sceren and
+            removed from available cortical areas. when its put back it is addded to async storage.
+            so
+            ON ADD CONTROL, ADD TO CORT 2
+            ON LOAD, ADD CORT 2 REMOVE FROM CORT 1 cool. add add Control should remove it from cort1 anyway
+            addCotrol(CORT2, remove CORT1)
+            just like 2 more async storage adds and an extra query per thing. not too bad
+            delete adds to cort1 removes from cort 2 does this help
+            SHOW ON SCREEN
+            IF REMOVED FROM SCREEN AD TO CORT1 REMOVE FROM 2
 
-		*/
+        */
         // Track this cortical area as added
         let prom = await TestFetch();
 
@@ -123,12 +123,12 @@ const CorticalPage = () => {
                 const newKey = await AsyncStorage.getItem(trueKey);
                 const obj = JSON.parse(newKey);
                 if (obj.key === corticalId) {
-					console.log("The true key is " + trueKey);
-					const savedVal = await AsyncStorage.getItem(trueKey);
-					//console.log("stringifying" + savedVal);
-					await AsyncStorage.setItem((`saved${trueKey}`), savedVal);
-					console.log(await AsyncStorage.getItem(`saved${trueKey}`));
-					console.log((`saved${trueKey}`));
+                    console.log("The true key is " + trueKey);
+                    const savedVal = await AsyncStorage.getItem(trueKey);
+                    //console.log("stringifying" + savedVal);
+                    await AsyncStorage.setItem((`saved${trueKey}`), savedVal);
+                    console.log(await AsyncStorage.getItem(`saved${trueKey}`));
+                    console.log((`saved${trueKey}`));
                     await AsyncStorage.removeItem(trueKey);
 
                     //await AsyncStorage
@@ -174,18 +174,18 @@ const CorticalPage = () => {
             var placeholderPayload = (`{"stimulation_payload": {"${control.corticalId}": [`);
             for(let i = 0; i<control.slideCount; i++){
 				if(i === (control.slideCount-1)){
-					placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}]`);
-				}
+                    placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}]`);
+                }
 				else{
-					placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}], `);
-				}
-				//placeholderPayload += ('[' + i + + ', 0, 0, ' + + '],');
-				//placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}], `);
-				//console.log("placeholder" + control.valueSlider[i]);
-			}
-			placeholderPayload += (`]}}`);
-			console.log("placeholder " + placeholderPayload);
-			//placeholderPayload = placeholderPayload.toString();
+                    placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}], `);
+                }
+                //placeholderPayload += ('[' + i + + ', 0, 0, ' + + '],');
+                //placeholderPayload += (`[${i}, 0, 0, ${control.valueSlider[i]}], `);
+                //console.log("placeholder" + control.valueSlider[i]);
+            }
+            placeholderPayload += (`]}}`);
+            console.log("placeholder " + placeholderPayload);
+            //placeholderPayload = placeholderPayload.toString();
             const payload = {
                 "stimulation_payload": {
                     [control.corticalId]: [[index, 0, 0, value]]
@@ -193,7 +193,7 @@ const CorticalPage = () => {
             };
 
             console.log('Sending slider data:', JSON.stringify(placeholderPayload));
-			console.log(control);
+            console.log(control);
             // Send the POST request
             const response = await fetch(endpoint, {
                 method: 'POST',
@@ -351,7 +351,7 @@ const CorticalPage = () => {
 
             // This is reading in the controls
             if (!api) {
-				//console.log("API not available yet debug");
+                //console.log("API not available yet debug");
 				var JSONStringPlaceholder = await ({"___pwr":{"cortical_name":"Brain_Power","cortical_group":"CORE","cortical_sub_group":"","visible":true,"coordinates_2d":[null,null],"coordinates_3d":[10,0,-20],"cortical_dimensions":[1,1,1]},"_death":{"cortical_name":"Brain_Death","cortical_group":"CORE","cortical_sub_group":"","visible":true,"coordinates_2d":[null,null],"coordinates_3d":[10,0,-30],"cortical_dimensions":[1,1,1]},"i__inf":{"cortical_name":"Infrared sensor","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[0,91],"coordinates_3d":[40,0,0],"cortical_dimensions":[1,1,1],"dev_count":1,"cortical_dimensions_per_device":[1,1,1]},"M5Ubem":{"cortical_name":"bemmy","cortical_group":"CUSTOM","cortical_sub_group":"MEMORY","visible":true,"coordinates_2d":[15,25],"coordinates_3d":[40,0,0],"cortical_dimensions":[1,1,1]},"o__mot":{"cortical_name":"Motor control","cortical_group":"OPU","cortical_sub_group":"","visible":true,"coordinates_2d":[-8,-91],"coordinates_3d":[40,0,0],"cortical_dimensions":[2,1,10],"dev_count":1,"cortical_dimensions_per_device":[2,1,10]},"C7Vcor":{"cortical_name":"cory","cortical_group":"CUSTOM","cortical_sub_group":"","visible":true,"coordinates_2d":[-67,-30],"coordinates_3d":[40,0,0],"cortical_dimensions":[1,1,1]},"iv00CC":{"cortical_name":"Central vision sensor in color","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[41,157],"coordinates_3d":[30,100,-20],"cortical_dimensions":[96,32,3],"dev_count":3,"cortical_dimensions_per_device":[32,32,3]},"iv00_C":{"cortical_name":"Central vision sensor","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[42,107],"coordinates_3d":[30,40,-20],"cortical_dimensions":[192,64,1],"dev_count":3,"cortical_dimensions_per_device":[64,64,1]},"iv00TL":{"cortical_name":"Peripheral vision sensor - top left","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[76,128],"coordinates_3d":[20,105,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00TM":{"cortical_name":"Peripheral vision sensor - top middle","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[91,56],"coordinates_3d":[55,105,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00TR":{"cortical_name":"Peripheral vision sensor - top right","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[74,127],"coordinates_3d":[95,105,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00ML":{"cortical_name":"Peripheral vision sensor - middle left","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[61,163],"coordinates_3d":[20,70,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00MR":{"cortical_name":"Peripheral vision sensor - middle right","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[81,156],"coordinates_3d":[95,70,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00BL":{"cortical_name":"Peripheral vision sensor - bottom left","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[99,12],"coordinates_3d":[20,30,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00BR":{"cortical_name":"Peripheral vision sensor - bottom right","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[59,144],"coordinates_3d":[95,30,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"iv00BM":{"cortical_name":"Peripheral vision sensor - bottom middle","cortical_group":"IPU","cortical_sub_group":"","visible":true,"coordinates_2d":[73,16],"coordinates_3d":[55,30,-20],"cortical_dimensions":[24,8,1],"dev_count":3,"cortical_dimensions_per_device":[8,8,1]},"o_mctl":{"cortical_name":"Motion control","cortical_group":"OPU","cortical_sub_group":"","visible":true,"coordinates_2d":[1019,98],"coordinates_3d":[20,0,-10],"cortical_dimensions":[8,3,10],"dev_count":2,"cortical_dimensions_per_device":[4,3,10]}}).toString();
                 var parsedVal = await json.parse(JSONStringPlaceholder);
                 console.log("parsedVal: " + parsedVal);
@@ -374,7 +374,7 @@ const CorticalPage = () => {
                 setControls([]);
                 setAddedCorticalIds([]);
                 // Here it's mapping the keys to the values found in the API
-				//x01
+                //x01
                 //setIsLoading(false);
             }
             catch (error) {
@@ -383,7 +383,7 @@ const CorticalPage = () => {
             }
         };
         const holderFunc = async () => {
-			//not sure if i need this
+            //not sure if i need this
             await loadControls();
         }
         holderFunc();
@@ -393,12 +393,12 @@ const CorticalPage = () => {
     useEffect(() => {
         const cortCheck = async () =>{
 
-	        if (Object.keys(availableCorticalAreas).length === 0) {
-				console.log("not happening")
-				return;
-			}
+            if (Object.keys(availableCorticalAreas).length === 0) {
+                console.log("not happening")
+                return;
+            }
 			else{
-				var theKey = await AsyncStorage.getAllKeys()
+                var theKey = await AsyncStorage.getAllKeys()
                 for (let key of Object.keys(availableCorticalAreas)) {
                     // Only auto-add areas with y=1
                     if (availableCorticalAreas[key].cortical_dimensions[1] === 1) {
@@ -422,32 +422,32 @@ const CorticalPage = () => {
 
                 }
 
-				let prom = await TestFetch();
+                let prom = await TestFetch();
                 for (let item of prom) {
-					let trueKey = item[0].toString();
-					console.log("here?");
+                    let trueKey = item[0].toString();
+                    console.log("here?");
 					if(trueKey.substring(0, 5) === "saved"){
-						var asyncString = await AsyncStorage.getItem(trueKey);
-						var JSONobj = JSON.parse(asyncString);
-						console.log(JSON.stringify(JSONobj));
-						await addControl(
-                        JSONobj.cortical_name,
-                        JSONobj.cortical_dimensions,
-                        JSONobj.key,
-                    );
+                        var asyncString = await AsyncStorage.getItem(trueKey);
+                        var JSONobj = JSON.parse(asyncString);
+                        console.log(JSON.stringify(JSONobj));
+                        await addControl(
+                            JSONobj.cortical_name,
+                            JSONobj.cortical_dimensions,
+                            JSONobj.key,
+                        );
 
-					}
+                    }
 
-				}
-
-
-				await setMappedAreas(await getAvailableAreas());
-				setIsLoading(false);
+                }
 
 
-			}
-		}
-		cortCheck();
+                await setMappedAreas(await getAvailableAreas());
+                setIsLoading(false);
+
+
+            }
+        }
+        cortCheck();
 
     }, [availableCorticalAreas]);
 
@@ -491,13 +491,13 @@ const CorticalPage = () => {
 
 
             if(trueKey.substring(0, 5) === "saved"){
-				var Newtry = await AsyncStorage.getItem(trueKey);
+                var Newtry = await AsyncStorage.getItem(trueKey);
                 var jsonTry = JSON.parse(Newtry);
                 console.log("trying " + jsonTry.key);
                 if(jsonTry.key === controlToRemove.corticalId){
-					console.log("match! on " + trueKey);
-					await AsyncStorage.removeItem(trueKey);
-				}
+                    console.log("match! on " + trueKey);
+                    await AsyncStorage.removeItem(trueKey);
+                }
                 console.log(trueKey);
 
                 //console.log("trying " + Newtry);
@@ -583,12 +583,12 @@ const CorticalPage = () => {
         }
         return available;
     }
-//
+    //
     // Navigate back to godot page
     const goBack = () => {
         router.push('/godotpage');
     };
-//
+    //
 
     // Render a single control box
     const renderControl = (control: Control) => {
@@ -621,15 +621,16 @@ const CorticalPage = () => {
                         control.type === '1D' && control.valueSlider ? (
                             // Render multiple sliders if needed
                             control.valueSlider.map((value, index) => (
-                                <View key={`slider-${control.id}-${index}`}>
-                                    <Text style={{color: 'white', fontSize: 20}}>
-                                        {index}
-                                    </Text>
+                                <View key={`slider-${control.id}-${index}`} style={styles.sliderContainer}>
+                                    <View style={styles.sliderLabelContainer}>
+                                        <Text style={styles.sliderLabel}>{index}</Text>
+                                        <Text style={styles.sliderValue}>{Math.round(value)}%</Text>
+                                    </View>
                                     <Slider
                                         style={styles.slider}
                                         minimumValue={0}
                                         maximumValue={100}
-                                        step={.001}
+                                        step={0.001}
                                         value={value}
 
                                         onSlidingComplete={(newValue) => {
@@ -902,11 +903,28 @@ const styles = StyleSheet.create({
         color: '#fff',
         marginBottom: 10,
     },
-    slider: {
+    sliderContainer: {
+        marginVertical: 5,
         width: '100%',
-        height: 60,
-        transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }]
-    },
+      },
+      sliderLabelContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 5,
+      },
+      sliderLabel: {
+        color: 'white',
+        fontSize: 16,
+      },
+      sliderValue: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+      },
+      slider: {
+        width: '100%',
+        height: 40,
+      },
     deleteButton: {
         justifyContent: 'center',
         alignItems: 'center',
@@ -1085,4 +1103,4 @@ export default CorticalPage;
 
                 }
 
-				*/
+                */
