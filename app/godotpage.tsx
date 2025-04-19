@@ -146,8 +146,13 @@ export default function GodotPage() {
 		if (tempCameraEnable) {
 			try {
 				const { status } = await Camera.requestCameraPermissionsAsync();
+				//   console.log("Camera permission status:", status);
+				setPermission({ status, granted: status === 'granted' });
+
+				// Only set camera enabled if permission was just granted
 				if (status === "granted") {
-					setIsCameraEnabled(true);
+					setIsCameraEnabled(true);  // Directly set to true
+					console.log("status is set to granted");
 					capabilities.capabilities.input.camera[0].disabled = false;
 
 					// Optional: Update camera parameters if needed
@@ -157,26 +162,88 @@ export default function GodotPage() {
 					sendData(JSON.stringify(capabilities));
 				}
 			} catch (error) {
-				console.error("Camera error:", error);
+				console.error("Camera permission error:", error);
 				capabilities.capabilities.input.camera[0].disabled = true;
 				sendData(JSON.stringify(capabilities));
+
+				setTempCameraEnable(false);
 			}
 		} else {
-			capabilities.capabilities.input.camera[0].disabled = true;
 			stopCameraFeed();
+			capabilities.capabilities.input.camera[0].disabled = true;
+
+			console.log("stopcamerafeed called");
 		}
 	};
 
 	//Ed added this
-	//removed start camerafeed
+	const startCameraFeed = async () => {
+		try {
+			console.log("started camera feed");
+			// Start frame capture interval
+			const frameInterval = setInterval(async () => {
+				if (cameraRef.current) {
+					try {
+						// Capture frame
+						const photo = await cameraRef.current.takePictureAsync({
+							quality: 0.7,
+							base64: true,
+							skipProcessing: true
+						});
+
+						console.log("Raw Camera Frame:", {
+							base64Length: photo.base64?.length,
+							width: photo.width,
+							height: photo.height,
+							uri: photo.uri,
+							base64Prefix: photo.base64?.substring(0, 30) + '...' // Show first 30 chars of base64
+						});
+
+						// Combine with other sensor data
+						const combinedData = {
+							timestamp: Date.now(),
+							camera: {
+								frame: photo.base64,
+								width: photo.width,
+								height: photo.height
+							},
+							sensors: {
+								accelerometer: minAccel, // Your existing min/max values
+								gyroscope: minGyro
+							}
+						};
+
+						// Send via WebSocket
+						sendData(JSON.stringify(combinedData));
+
+					} catch (error) {
+						console.error("Frame capture error:", error);
+					}
+				}
+			}, 300); // 10fps (adjust as needed)
+
+			setFrameIntervalId(frameInterval);
+
+			// Notify FEAGI camera is active
+			sendData(JSON.stringify({
+				type: 'camera_control',
+				status: 'activated',
+				timestamp: Date.now()
+			}));
+
+		} catch (error) {
+			console.error("Camera feed start error:", error);
+		}
+	};
 
 	const stopCameraFeed = () => {
 		setIsCameraEnabled(false);
 		setIsCameraMounted(false);
-
-		// Update capabilities (consistent with accelerometer/gyro approach)
-		capabilities.capabilities.input.camera[0].disabled = true;
-		sendData(JSON.stringify(capabilities));
+		sendData(JSON.stringify({
+			type: 'camera_control',
+			status: 'deactivated',
+			timestamp: Date.now()
+		}));
 	};
 
 	const cancelSensoryData = () => {
@@ -218,6 +285,21 @@ export default function GodotPage() {
 			}).start();
 			setMenuVisible(false);
 		}
+	}
+
+	const deleteKeys = () => {
+		AsyncStorage.getAllKeys((err, keys) => {
+			AsyncStorage.multiGet(keys, (err, stores) => {
+				stores.map((result, i, store) => {
+					// get at each store's key/value so you can work with it
+					console.log("deleting: ");
+					let key = store[i][0];
+					let value = store[i][1];
+					console.log("key: " + key + " Value: " + value);
+					AsyncStorage.removeItem(key);
+				});
+			});
+		});
 	}
 
 	const plugGodot = async () => {
@@ -448,11 +530,15 @@ export default function GodotPage() {
 
 
 
-						
-						{isCameraEnabled && permission?.granted && (	
+
+						{isCameraEnabled && permission?.granted && (
 							<CameraView style={styles.cameraPreview} 
 							facing={facing}
-							// camera
+							onCameraReady={() => {
+								console.log("Camera is ready");
+								setIsCameraMounted(true);
+								startCameraFeed(); // ✅ Start only once camera is mounted and ready
+							  }}
 							ref={cameraRef}>
 								<TouchableOpacity
 										style={styles.flipButton}
@@ -461,8 +547,8 @@ export default function GodotPage() {
 										<Ionicons name="camera-reverse" size={24} color="white" />
 									</TouchableOpacity>
 							</CameraView>
-						)} 
-					
+						)}
+
 						
 
 						<WebView
@@ -512,6 +598,9 @@ export default function GodotPage() {
 								true;
 							  `}
 						/>
+						
+
+						
 					</View>
 				</ScrollView>
 			</View>
