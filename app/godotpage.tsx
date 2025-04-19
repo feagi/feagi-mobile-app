@@ -587,25 +587,9 @@ export default function GodotPage() {
 								true;
 							  `}
 						/>
-						{lastFrame && (
-							<View style={styles.framePreviewContainer}>
-								<Image
-									source={{ uri: lastFrame }}
-									style={styles.framePreview}
-									resizeMode="contain"
-								/>
-								<Text style={styles.frameDebugText}>
-									Last frame: {new Date().toLocaleTimeString()}
-								</Text>
-							</View>
-						)}
+						
 
-						<TouchableOpacity
-							style={[styles.button, { margin: 50 }]}
-							onPress={() => deleteKeys()}
-						>
-							<Text style={styles.buttonText}>Delete Keys</Text>
-						</TouchableOpacity>
+						
 					</View>
 				</ScrollView>
 			</View>
