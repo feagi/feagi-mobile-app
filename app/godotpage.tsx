@@ -160,7 +160,6 @@ export default function GodotPage() {
 					capabilities.capabilities.input.camera[0].mirror = false;
 
 					sendData(JSON.stringify(capabilities));
-					startCameraFeed();
 				}
 			} catch (error) {
 				console.error("Camera permission error:", error);
@@ -192,6 +191,14 @@ export default function GodotPage() {
 							skipProcessing: true
 						});
 
+						console.log("Raw Camera Frame:", {
+							base64Length: photo.base64?.length,
+							width: photo.width,
+							height: photo.height,
+							uri: photo.uri,
+							base64Prefix: photo.base64?.substring(0, 30) + '...' // Show first 30 chars of base64
+						});
+
 						// Combine with other sensor data
 						const combinedData = {
 							timestamp: Date.now(),
@@ -213,7 +220,7 @@ export default function GodotPage() {
 						console.error("Frame capture error:", error);
 					}
 				}
-			}, 100); // 10fps (adjust as needed)
+			}, 300); // 10fps (adjust as needed)
 
 			setFrameIntervalId(frameInterval);
 
@@ -527,7 +534,11 @@ export default function GodotPage() {
 						{isCameraEnabled && permission?.granted && (
 							<CameraView style={styles.cameraPreview} 
 							facing={facing}
-							
+							onCameraReady={() => {
+								console.log("Camera is ready");
+								setIsCameraMounted(true);
+								startCameraFeed(); // ✅ Start only once camera is mounted and ready
+							  }}
 							ref={cameraRef}>
 								<TouchableOpacity
 										style={styles.flipButton}
