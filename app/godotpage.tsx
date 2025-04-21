@@ -13,17 +13,29 @@ import WebView from "react-native-webview";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Switch, GestureHandlerRootView } from "react-native-gesture-handler";
 import { router } from "expo-router";
-import { useCameraPermissions } from "expo-camera";
+import {
+  Camera,
+  CameraType,
+  CameraView,
+  useCameraPermissions,
+} from "expo-camera";
 import { Accelerometer, Gyroscope } from "expo-sensors";
 import { Ionicons } from "@expo/vector-icons";
 import capabilities from "../constants/capabilities.js";
 import HelpModal from "./helpModal";
 import { WebSocketManager } from "./websocket";
+import { getASCII } from "../utils/littleHelpers.js";
+
+type CameraPermissionResponse = {
+  status: "granted" | "denied" | "undetermined";
+  granted: boolean;
+};
 
 export default function GodotPage() {
   const [godot, onGodotChange] = useState("");
   const [menuVisible, setMenuVisible] = useState(false); // hamburger menu
   const slideAnim = useRef(new Animated.Value(-250)).current; // Animation for sliding menu
+  const [helpModalVisible, setHelpModalVisible] = useState(false); // State for Help Modal
   const [mobileSettingsModalVisible, setMobileSettingsModalVisible] =
     useState(false);
   const [currentOrientation, setCurrentOrientation] = useState("portrait");
@@ -32,14 +44,25 @@ export default function GodotPage() {
   const [isGyroscopeEnabled, setIsGyroscopeEnabled] = useState(false);
   const [tempAccelEnable, setTempAccelEnable] = useState(false);
   const [tempGyroEnable, setTempGyroEnable] = useState(false);
+  const gyroASCII = getASCII("rawGYR");
   // let minAccel = { x: Infinity, y: Infinity, z: Infinity };
   // let maxAccel = { x: -Infinity, y: -Infinity, z: -Infinity };
   // let minGyro = { x: Infinity, y: Infinity, z: Infinity };
   // let maxGyro = { x: -Infinity, y: -Infinity, z: -Infinity };
   // camera
+  const cameraRef = useRef<Camera | null>(null);
   const [isCameraEnabled, setIsCameraEnabled] = useState(false);
   const [tempCameraEnable, setTempCameraEnable] = useState(false);
-  const [permission, requestPermission] = useCameraPermissions();
+  // const [permission, requestPermission] = useCameraPermissions();
+  const [permission, setPermission] = useState<CameraPermissionResponse | null>(
+    null
+  );
+  const [lastFrame, setLastFrame] = useState<string | null>(null);
+  const [isCameraMounted, setIsCameraMounted] = useState(false);
+  const [facing, setFacing] = useState<CameraType>("front");
+  const [frameIntervalId, setFrameIntervalId] = useState<NodeJS.Timeout | null>(
+    null
+  );
   // websocket
   const wsMgr = useRef<WebSocketManager | null>(null);
 
@@ -119,6 +142,35 @@ export default function GodotPage() {
   //     // ];
   //   }
   // };
+  const flipCamera = () => {
+    setFacing((current) => (current === "back" ? "front" : "back"));
+  };
+
+  const changeCameraState = async () => {
+    try {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      //   console.log("Camera permission status:", status);
+      setPermission({ status, granted: status === "granted" });
+
+      // Only set camera enabled if permission was just granted
+      if (status === "granted") {
+        setIsCameraEnabled(true); // Directly set to true
+        console.log("status is set to granted");
+        capabilities.capabilities.input.camera[0].disabled = false;
+
+        // Optional: Update camera parameters if needed
+        capabilities.capabilities.input.camera[0].threshold_default = 50; // Example
+        capabilities.capabilities.input.camera[0].mirror = false;
+
+        wsMgr.current?.send(JSON.stringify(capabilities));
+      }
+    } catch (error) {
+      console.error("Camera permission error:", error);
+      capabilities.capabilities.input.camera[0].disabled = true;
+      // wsMgr.current?.send(JSON.stringify(capabilities));
+      setTempCameraEnable(false);
+    }
+  };
 
   useEffect(() => {
     async function letsGetItStarted() {
@@ -158,11 +210,30 @@ export default function GodotPage() {
       Gyroscope.addListener((data) => {
         // console.log("GYROSCOPE DATA:", data);
         if (data?.x) {
-          const formatted = {
-            cortical_stimulation: {
-              i__gyr: [data.x, data.y, data.z],
-            },
-          };
+          // const formatted = {
+          //   cortical_stimulation: {
+          //     i__gyr: [data.x, data.y, data.z],
+          //   },
+          // };
+
+          const formatted = [
+            ...gyroASCII,
+            12, // width/length
+            0, // height (N/A)
+            0,
+            0,
+            0,
+            data.x,
+            1,
+            0,
+            0,
+            data.y,
+            2,
+            0,
+            0,
+            data.z,
+          ];
+
           wsMgr.current?.send(JSON.stringify(formatted));
         } else {
           console.error("Got gyro data, but it doesn't have an x value:", data);
@@ -173,21 +244,30 @@ export default function GodotPage() {
       capabilities.capabilities.input.gyro[0].disabled = true;
     }
 
-    if (isCameraEnabled) {
-      if (!permission?.granted) {
-        requestPermission().then(({ granted }) => {
-          if (granted) {
-            startCameraFeed();
-          }
-        });
-        //updateSensoryData();
-      } else {
-        console.log("Camera is activated");
-        startCameraFeed();
-      }
+    if (tempCameraEnable) {
+      changeCameraState();
     } else {
       stopCameraFeed();
+      capabilities.capabilities.input.camera[0].disabled = true;
+
+      console.log("stopcamerafeed called");
     }
+
+    // if (isCameraEnabled) {
+    //   if (!permission?.granted) {
+    //     requestPermission().then(({ granted }) => {
+    //       if (granted) {
+    //         startCameraFeed();
+    //       }
+    //     });
+    //     //updateSensoryData();
+    //   } else {
+    //     console.log("Camera is activated");
+    //     startCameraFeed();
+    //   }
+    // } else {
+    //   stopCameraFeed();
+    // }
   }, [isAccelerometerEnabled, isGyroscopeEnabled, isCameraEnabled]);
 
   const updateSensoryData = () => {
@@ -197,36 +277,82 @@ export default function GodotPage() {
   };
 
   // Ed added this
-  const startCameraFeed = () => {
-    setIsCameraEnabled(true);
-    // sendData(
-    //   JSON.stringify({
-    //     type: "camera_control",
-    //     status: "activated",
-    //     timestamp: Date.now(),
-    //   })
-    // );
+  const startCameraFeed = async () => {
+    try {
+      console.log("started camera feed");
+      // Start frame capture interval
+      const frameInterval = setInterval(async () => {
+        if (cameraRef.current) {
+          try {
+            // Capture frame
+            const photo = await cameraRef.current?.takePictureAsync({
+              quality: 0.7,
+              base64: true,
+              skipProcessing: true,
+            });
+
+            // console.log("Raw Camera Frame:", {
+            //   base64Length: photo.base64?.length,
+            //   width: photo.width,
+            //   height: photo.height,
+            //   uri: photo.uri,
+            //   base64Prefix: photo.base64?.substring(0, 30) + "...", // Show first 30 chars of base64
+            // });
+
+            // Combine with other sensor data
+            const combinedData = {
+              timestamp: Date.now(),
+              camera: {
+                frame: photo.base64,
+                width: photo.width,
+                height: photo.height,
+              },
+              // sensors: {
+              // 	accelerometer: minAccel, // Your existing min/max values
+              // 	gyroscope: minGyro
+              // }
+            };
+
+            // Send via WebSocket
+            wsMgr.current?.send(JSON.stringify(combinedData));
+          } catch (error) {
+            console.error("Frame capture error:", error);
+          }
+        }
+      }, 300); // 10fps (adjust as needed)
+
+      setFrameIntervalId(frameInterval);
+
+      // Notify FEAGI camera is active
+      wsMgr.current?.send(
+        JSON.stringify({
+          type: "camera_control",
+          status: "activated",
+          timestamp: Date.now(),
+        })
+      );
+    } catch (error) {
+      console.error("Camera feed start error:", error);
+    }
   };
 
   const stopCameraFeed = () => {
     setIsCameraEnabled(false);
-    // sendData(
-    //   JSON.stringify({
-    //     type: "camera_control",
-    //     status: "deactivated",
-    //     timestamp: Date.now(),
-    //   })
-    // );
+    setIsCameraMounted(false);
+    wsMgr.current?.send(
+      JSON.stringify({
+        type: "camera_control",
+        status: "deactivated",
+        timestamp: Date.now(),
+      })
+    );
   };
-
   const cancelSensoryData = () => {
     setTempAccelEnable(isAccelerometerEnabled);
     setTempGyroEnable(isGyroscopeEnabled);
     setTempCameraEnable(isCameraEnabled);
     setMobileSettingsModalVisible(false);
   };
-
-  const [helpModalVisible, setHelpModalVisible] = useState(false); // State for Help Modal
 
   // Toggle the dropdown menu
   const toggleMenu = () => {
@@ -482,6 +608,26 @@ export default function GodotPage() {
               />
             </TouchableOpacity>
 
+            {isCameraEnabled && permission?.granted && (
+              <CameraView
+                style={styles.cameraPreview}
+                facing={facing}
+                onCameraReady={() => {
+                  console.log("Camera is ready");
+                  setIsCameraMounted(true);
+                  startCameraFeed(); // ✅ Start only once camera is mounted and ready
+                }}
+                ref={cameraRef}
+              >
+                <TouchableOpacity
+                  style={styles.flipButton}
+                  onPress={flipCamera}
+                >
+                  <Ionicons name="camera-reverse" size={24} color="white" />
+                </TouchableOpacity>
+              </CameraView>
+            )}
+
             <WebView
               //source={require("../assets/feagi/index.html")}
               source={{
@@ -537,6 +683,26 @@ export default function GodotPage() {
 }
 
 const styles = StyleSheet.create({
+  cameraPreview: {
+    position: "absolute",
+    width: 120,
+    height: 160,
+    right: 10,
+    top: 10,
+    zIndex: 100,
+    borderRadius: 8,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "white",
+  },
+  flipButton: {
+    position: "absolute",
+    bottom: 5,
+    right: 5,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 20,
+    padding: 5,
+  },
   button: {
     position: "absolute", // Position the button absolutely
     bottom: 20, // Distance from the bottom of the screen
