@@ -45,7 +45,7 @@ export class WebSocketManager {
 
       this.webSocket.onerror = (e) => {
         console.log("ws error: ", e);
-        alert("hey");
+        alert("Websocket error: " + e.message);
       };
 
       this.webSocket.onclose = () => {

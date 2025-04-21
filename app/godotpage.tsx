@@ -156,8 +156,17 @@ export default function GodotPage() {
       capabilities.capabilities.input.gyro[0].disabled = false;
 
       Gyroscope.addListener((data) => {
-        console.log("GYROSCOPE DATA:", data);
-        // send via ws
+        // console.log("GYROSCOPE DATA:", data);
+        if (data?.x) {
+          const formatted = {
+            cortical_stimulation: {
+              i__gyr: [data.x, data.y, data.z],
+            },
+          };
+          wsMgr.current?.send(JSON.stringify(formatted));
+        } else {
+          console.error("Got gyro data, but it doesn't have an x value:", data);
+        }
       });
     } else if (!isGyroscopeEnabled && Gyroscope.hasListeners()) {
       Gyroscope.removeAllListeners();
@@ -466,7 +475,7 @@ export default function GodotPage() {
             <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
               <Ionicons
                 name="menu"
-                size={32}
+                size={64}
                 color="black"
                 backgroundColor="white"
                 borderRadius={5}
