@@ -6,8 +6,8 @@ export default capabilities = {
         0: {
           custom_name: "gyro",
           disabled: false,
-          min_value: [0.0, 0.0, 0.0],
-          max_value: [0.0, 0.0, 0.0],
+          min_value: [-1.0, -1.0, -1.0],
+          max_value: [1.0, 1.0, 1.0],
           feagi_index: 0,
         },
       },
@@ -15,8 +15,8 @@ export default capabilities = {
         0: {
           custom_name: "acceleration",
           disabled: false,
-          min_value: [0.0, 0.0, 0.0],
-          max_value: [0.0, 0.0, 0.0],
+          min_value: [-1.0, -1.0, -1.0],
+          max_value: [1.0, 1.0, 1.0],
           feagi_index: 0,
         },
       },

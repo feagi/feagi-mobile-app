@@ -17,10 +17,16 @@ import {
   Camera,
   CameraType,
   CameraView,
-  useCameraPermissions,
+  // useCameraPermissions,
 } from "expo-camera";
-import { Accelerometer, Gyroscope } from "expo-sensors";
+import {
+  Accelerometer,
+  AccelerometerMeasurement,
+  Gyroscope,
+  GyroscopeMeasurement,
+} from "expo-sensors";
 import { Ionicons } from "@expo/vector-icons";
+import { compress } from "lz4js";
 import capabilities from "../constants/capabilities.js";
 import HelpModal from "./helpModal";
 import { WebSocketManager } from "./websocket";
@@ -45,6 +51,7 @@ export default function GodotPage() {
   const [tempAccelEnable, setTempAccelEnable] = useState(false);
   const [tempGyroEnable, setTempGyroEnable] = useState(false);
   const gyroASCII = getASCII("rawGYR");
+  const accelerometerASCII = getASCII("rawACC");
   // let minAccel = { x: Infinity, y: Infinity, z: Infinity };
   // let maxAccel = { x: -Infinity, y: -Infinity, z: -Infinity };
   // let minGyro = { x: Infinity, y: Infinity, z: Infinity };
@@ -142,6 +149,7 @@ export default function GodotPage() {
   //     // ];
   //   }
   // };
+
   const flipCamera = () => {
     setFacing((current) => (current === "back" ? "front" : "back"));
   };
@@ -172,6 +180,35 @@ export default function GodotPage() {
     }
   };
 
+  const formatAccGyroData = (
+    data: AccelerometerMeasurement | GyroscopeMeasurement,
+    type: string
+  ) => {
+    const formatted = [
+      ...(type === "acc" ? accelerometerASCII : gyroASCII),
+      12, // width/length
+      0, // height (N/A here)
+      0,
+      0,
+      0,
+      data.x,
+      1,
+      0,
+      0,
+      data.y,
+      2,
+      0,
+      0,
+      data.z,
+    ];
+
+    const compressed = compress(
+      new TextEncoder().encode(JSON.stringify(formatted))
+    );
+
+    return compressed;
+  };
+
   useEffect(() => {
     async function letsGetItStarted() {
       if (isAccelerometerEnabled || isGyroscopeEnabled || isCameraEnabled) {
@@ -188,10 +225,24 @@ export default function GodotPage() {
       capabilities.capabilities.input.accelerometer[0].disabled = false;
 
       Accelerometer.addListener((data) => {
-        console.log("ACCELEROMETER DATA:", data);
-        // send via ws
-        if (wsMgr.current)
-          wsMgr.current.send(JSON.stringify({ type: "accelerometer", data }));
+        // console.log("ACCELEROMETER DATA:", data);
+        if (!wsMgr.current) {
+          console.error(
+            "No websocket found. Skipping sending accelerometer data."
+          );
+          return;
+        }
+        if (!data?.x) {
+          console.error(
+            "Got accelerometer data, but it doesn't have an x value:",
+            data
+          );
+          return;
+        }
+        const compressed = formatAccGyroData(data, "acc");
+        // console.log("sending");
+
+        wsMgr.current?.send(compressed);
       });
 
       // return () => sub.remove(); // Proper cleanup
@@ -209,35 +260,16 @@ export default function GodotPage() {
 
       Gyroscope.addListener((data) => {
         // console.log("GYROSCOPE DATA:", data);
-        if (data?.x) {
-          // const formatted = {
-          //   cortical_stimulation: {
-          //     i__gyr: [data.x, data.y, data.z],
-          //   },
-          // };
-
-          const formatted = [
-            ...gyroASCII,
-            12, // width/length
-            0, // height (N/A)
-            0,
-            0,
-            0,
-            data.x,
-            1,
-            0,
-            0,
-            data.y,
-            2,
-            0,
-            0,
-            data.z,
-          ];
-
-          wsMgr.current?.send(JSON.stringify(formatted));
-        } else {
-          console.error("Got gyro data, but it doesn't have an x value:", data);
+        if (!wsMgr.current) {
+          console.error("No websocket found. Skipping sending gyro data.");
+          return;
         }
+        if (!data?.x) {
+          console.error("Got gyro data, but it doesn't have an x value:", data);
+          return;
+        }
+        const compressed = formatAccGyroData(data, "gyro");
+        wsMgr.current?.send(compressed);
       });
     } else if (!isGyroscopeEnabled && Gyroscope.hasListeners()) {
       Gyroscope.removeAllListeners();
