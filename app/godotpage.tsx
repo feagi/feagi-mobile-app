@@ -239,9 +239,8 @@ export default function GodotPage() {
           );
           return;
         }
-        const compressed = formatAccGyroData(data, "acc");
-        // console.log("sending");
 
+        const compressed = formatAccGyroData(data, "acc");
         wsMgr.current?.send(compressed);
       });
 

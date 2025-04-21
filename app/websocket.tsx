@@ -70,7 +70,7 @@ export class WebSocketManager {
       return;
     }
 
-    console.log("sending data: ", data);
+    // console.log("sending data: ", data);
     this.webSocket.send(data);
   }
 
