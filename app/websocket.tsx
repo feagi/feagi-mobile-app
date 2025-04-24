@@ -43,7 +43,7 @@ export class WebSocketManager {
         // console.log("message from server: ", e.data);
       };
 
-      this.webSocket.onerror = (e) => {
+      this.webSocket.onerror = (e: any) => {
         console.log("ws error: ", e);
         if (e.message?.includes("404")) {
           alert(

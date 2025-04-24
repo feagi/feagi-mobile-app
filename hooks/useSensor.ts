@@ -38,8 +38,7 @@ const useSensor = ({
   ) => {
     const formatted = [
       ...ASCII,
-      12, // width/length
-      0, // height (N/A here)
+      3, // length
       0,
       0,
       0,
