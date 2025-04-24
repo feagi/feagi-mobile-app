@@ -45,7 +45,13 @@ export class WebSocketManager {
 
       this.webSocket.onerror = (e) => {
         console.log("ws error: ", e);
-        alert("Websocket error: " + e.message);
+        if (e.message?.includes("404")) {
+          alert(
+            "Websocket connection gave a 404. Likely your FEAGI session is expired."
+          );
+        } else {
+          alert("Websocket error: " + e.message);
+        }
       };
 
       this.webSocket.onclose = () => {

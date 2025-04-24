@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Animated, ScrollView, Text, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
-import HelpModal from "./helpModal";
+import HelpModal from "./HelpModal";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet } from "react-native";
 

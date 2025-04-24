@@ -1,16 +1,7 @@
-import {
-  Pressable,
-  Text,
-  View,
-  Button,
-  StyleSheet,
-  Image,
-  TextInput,
-} from "react-native";
-import { Link, router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { Text, View, StyleSheet, Image } from "react-native";
+import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import LoginHandle from "./LoginHandle";
 
 export default function Input() {
   const _storeData = async () => {

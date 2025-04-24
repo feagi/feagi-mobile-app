@@ -1,5 +1,5 @@
-import { WebSocketManager } from "@/app/websocket";
-import { Inputs, UpdateInput } from "@/types/inputs";
+import { WebSocketManager } from "../app/websocket";
+import { Inputs, UpdateInput } from "../types/inputs";
 import { Ionicons } from "@expo/vector-icons";
 import { Camera, CameraType, CameraView } from "expo-camera";
 import React, { useEffect, useRef, useState } from "react";

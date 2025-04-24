@@ -2,7 +2,7 @@ import React from "react";
 import { Switch } from "react-native-gesture-handler";
 import { Text, View, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Inputs, UpdateInput } from "@/types/inputs";
+import { Inputs, UpdateInput } from "../types/inputs";
 
 type MobileSettingsProps = {
   inputs: Inputs;
