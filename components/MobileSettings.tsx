@@ -1,15 +1,21 @@
-import React, { useState } from "react";
+import React from "react";
 import { Switch } from "react-native-gesture-handler";
 import { Text, View, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Inputs, UpdateInput } from "@/types/inputs";
 
-const MobileSettings = ({
-  tempAccelEnable,
-  setTempAccelEnable,
-  tempCameraEnable,
-  setTempCameraEnable,
-  tempGyroEnable,
-  setTempGyroEnable,
+type MobileSettingsProps = {
+  inputs: Inputs;
+  updateInput: UpdateInput;
+  cancelSensoryData: () => void;
+  updateSensoryData: () => void;
+  mobileSettingsModalVisible: boolean;
+  setMobileSettingsModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const MobileSettings: React.FC<MobileSettingsProps> = ({
+  inputs,
+  updateInput,
   cancelSensoryData,
   updateSensoryData,
   mobileSettingsModalVisible,
@@ -45,30 +51,36 @@ const MobileSettings = ({
             <View style={styles.settingItem}>
               <Text style={styles.settingLabel}>Mobile Camera</Text>
               <Switch
-                value={tempCameraEnable}
-                onValueChange={(value) => setTempCameraEnable(value)}
+                value={inputs.camera.slider}
+                onValueChange={(value) =>
+                  updateInput("camera", { slider: value })
+                }
                 trackColor={{ false: "#767577", true: "#81D4FA" }}
-                thumbColor={tempCameraEnable ? "#fff" : "#f4f3f4"}
+                thumbColor={inputs.camera.slider ? "#fff" : "#f4f3f4"}
               />
             </View>
 
             <View style={styles.settingItem}>
               <Text style={styles.settingLabel}>Mobile Gyroscope</Text>
               <Switch
-                value={tempGyroEnable}
-                onValueChange={(value) => setTempGyroEnable(value)}
+                value={inputs.gyro.slider}
+                onValueChange={(value) =>
+                  updateInput("gyro", { slider: value })
+                }
                 trackColor={{ false: "#767577", true: "#81D4FA" }}
-                thumbColor={tempGyroEnable ? "#fff" : "#f4f3f4"}
+                thumbColor={inputs.gyro.slider ? "#fff" : "#f4f3f4"}
               />
             </View>
 
             <View style={styles.settingItem}>
               <Text style={styles.settingLabel}>Mobile Accelerometer</Text>
               <Switch
-                value={tempAccelEnable}
-                onValueChange={(value) => setTempAccelEnable(value)}
+                value={inputs.accel.slider}
+                onValueChange={(value) =>
+                  updateInput("accel", { slider: value })
+                }
                 trackColor={{ false: "#767577", true: "#81D4FA" }}
-                thumbColor={tempAccelEnable ? "#fff" : "#f4f3f4"}
+                thumbColor={inputs.accel.slider ? "#fff" : "#f4f3f4"}
               />
             </View>
           </View>

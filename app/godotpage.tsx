@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import WebView from "react-native-webview";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+// @ts-ignore
 import { compress } from "lz4js";
 import capabilities from "../constants/capabilities.js";
 import { WebSocketManager } from "./websocket";
@@ -27,30 +28,33 @@ import Webcam from "@/components/Webcam.js";
 
 export default function GodotPage() {
   const [godot, onGodotChange] = useState("");
+  const [deviceOrientation, setDeviceOrientation] = useState("portrait");
   const [menuVisible, setMenuVisible] = useState(false); // hamburger menu
   const slideAnim = useRef(new Animated.Value(-250)).current; // Animation for sliding menu
   const [mobileSettingsModalVisible, setMobileSettingsModalVisible] =
     useState(false);
-  const [currentOrientation, setCurrentOrientation] = useState("portrait");
-  // websocket
   const wsMgr = useRef<WebSocketManager | null>(null);
-  // camera
-  const [isCameraEnabled, setIsCameraEnabled] = useState(false);
-  const [tempCameraEnable, setTempCameraEnable] = useState(false);
-  const [enabledInputs, setEnabledInputs] = useState({
-    camera: { visual: false, actual: false },
+  const [inputs, setInputs] = useState({
+    camera: { slider: false, enabled: false },
+    gyro: { slider: false, enabled: false },
+    accel: { slider: false, enabled: false },
   });
-  // gyro / accelerometer
-  const [isAccelerometerEnabled, setIsAccelerometerEnabled] = useState(false);
-  const [isGyroscopeEnabled, setIsGyroscopeEnabled] = useState(false);
-  const [tempAccelEnable, setTempAccelEnable] = useState(false);
-  const [tempGyroEnable, setTempGyroEnable] = useState(false);
   const gyroASCII = getASCII("rawGYR");
   const accelerometerASCII = getASCII("rawACC");
   // let minAccel = { x: Infinity, y: Infinity, z: Infinity };
   // let maxAccel = { x: -Infinity, y: -Infinity, z: -Infinity };
   // let minGyro = { x: Infinity, y: Infinity, z: Infinity };
   // let maxGyro = { x: -Infinity, y: -Infinity, z: -Infinity };
+
+  function updateInput(
+    name: "camera" | "gyro" | "accel",
+    changes: Partial<{ slider: boolean; enabled: boolean }>
+  ) {
+    setInputs((prev) => ({
+      ...prev,
+      [name]: { ...prev[name], ...changes },
+    }));
+  }
 
   // Get FEAGI URL
   useEffect(() => {
@@ -75,7 +79,7 @@ export default function GodotPage() {
     // Detect initial orientation
     const { width, height } = Dimensions.get("window");
     const initialOrientation = width > height ? "landscape" : "portrait";
-    setCurrentOrientation(initialOrientation);
+    setDeviceOrientation(initialOrientation);
 
     // Listen for orientation changes
     const handleOrientationChange = ({
@@ -84,7 +88,7 @@ export default function GodotPage() {
       window: { width: number; height: number };
     }) => {
       const { width, height } = window;
-      setCurrentOrientation(width > height ? "landscape" : "portrait");
+      setDeviceOrientation(width > height ? "landscape" : "portrait");
     };
 
     // Add event listener
@@ -178,7 +182,11 @@ export default function GodotPage() {
 
   useEffect(() => {
     async function letsGetItStarted() {
-      if (isAccelerometerEnabled || isGyroscopeEnabled || isCameraEnabled) {
+      if (
+        inputs.accel.enabled ||
+        inputs.gyro.enabled ||
+        inputs.camera.enabled
+      ) {
         console.log("initializing ws");
         if (!wsMgr.current) wsMgr.current = new WebSocketManager(capabilities);
         await wsMgr.current.initialize();
@@ -187,7 +195,7 @@ export default function GodotPage() {
 
     letsGetItStarted();
 
-    if (isAccelerometerEnabled && !Accelerometer.hasListeners()) {
+    if (inputs.accel.enabled && !Accelerometer.hasListeners()) {
       Accelerometer.setUpdateInterval(1000);
       capabilities.capabilities.input.accelerometer[0].disabled = false;
 
@@ -212,7 +220,7 @@ export default function GodotPage() {
       });
 
       // return () => sub.remove(); // Proper cleanup
-    } else if (!isAccelerometerEnabled && Accelerometer.hasListeners()) {
+    } else if (!inputs.accel.enabled && Accelerometer.hasListeners()) {
       Accelerometer.removeAllListeners();
       capabilities.capabilities.input.accelerometer[0].disabled = true;
     }
@@ -220,7 +228,7 @@ export default function GodotPage() {
     // handleAccelPermission();
     // }
 
-    if (isGyroscopeEnabled && !Gyroscope.hasListeners()) {
+    if (inputs.gyro.enabled && !Gyroscope.hasListeners()) {
       Gyroscope.setUpdateInterval(1000);
       capabilities.capabilities.input.gyro[0].disabled = false;
 
@@ -237,22 +245,26 @@ export default function GodotPage() {
         const compressed = formatAccGyroData(data, "gyro");
         wsMgr.current?.send(compressed);
       });
-    } else if (!isGyroscopeEnabled && Gyroscope.hasListeners()) {
+    } else if (!inputs.gyro.enabled && Gyroscope.hasListeners()) {
       Gyroscope.removeAllListeners();
       capabilities.capabilities.input.gyro[0].disabled = true;
     }
-  }, [isAccelerometerEnabled, isGyroscopeEnabled, isCameraEnabled]);
+  }, [inputs.accel.enabled, inputs.gyro.enabled, inputs.camera.enabled]);
 
   const updateSensoryData = () => {
-    setIsAccelerometerEnabled(tempAccelEnable);
-    setIsGyroscopeEnabled(tempGyroEnable);
-    setIsCameraEnabled(tempCameraEnable);
+    setInputs((prev) => ({
+      camera: { ...prev.camera, enabled: prev.camera.slider },
+      gyro: { ...prev.gyro, enabled: prev.gyro.slider },
+      accel: { ...prev.accel, enabled: prev.accel.slider },
+    }));
   };
 
   const cancelSensoryData = () => {
-    setTempAccelEnable(isAccelerometerEnabled);
-    setTempGyroEnable(isGyroscopeEnabled);
-    setTempCameraEnable(isCameraEnabled);
+    setInputs((prev) => ({
+      camera: { ...prev.camera, slider: prev.camera.enabled },
+      gyro: { ...prev.gyro, slider: prev.gyro.enabled },
+      accel: { ...prev.accel, slider: prev.accel.enabled },
+    }));
     setMobileSettingsModalVisible(false);
   };
 
@@ -287,12 +299,8 @@ export default function GodotPage() {
         />
 
         <MobileSettings
-          tempAccelEnable={tempAccelEnable}
-          setTempAccelEnable={setTempAccelEnable}
-          tempCameraEnable={tempCameraEnable}
-          setTempCameraEnable={setTempCameraEnable}
-          tempGyroEnable={tempGyroEnable}
-          setTempGyroEnable={setTempGyroEnable}
+          inputs={inputs}
+          updateInput={updateInput}
           cancelSensoryData={cancelSensoryData}
           updateSensoryData={updateSensoryData}
           mobileSettingsModalVisible={mobileSettingsModalVisible}
@@ -312,7 +320,14 @@ export default function GodotPage() {
               />
             </TouchableOpacity>
 
-            {isCameraEnabled && <Webcam />}
+            {inputs.camera.enabled && (
+              <Webcam
+                wsMgr={wsMgr}
+                capabilities={capabilities}
+                inputs={inputs}
+                updateInput={updateInput}
+              />
+            )}
 
             <WebView
               source={{

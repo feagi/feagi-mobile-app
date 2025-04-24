@@ -1,3 +1,5 @@
+import { WebSocketManager } from "@/app/websocket";
+import { Inputs, UpdateInput } from "@/types/inputs";
 import { Ionicons } from "@expo/vector-icons";
 import { Camera, CameraType, CameraView } from "expo-camera";
 import React, { useEffect, useRef, useState } from "react";
@@ -8,12 +10,20 @@ type CameraPermissionResponse = {
   granted: boolean;
 };
 
-const Webcam = ({
+type WebcamProps = {
+  wsMgr: React.RefObject<WebSocketManager>;
+  capabilities: Record<string, any>;
+  inputs: Inputs;
+  updateInput: UpdateInput;
+};
+
+const Webcam: React.FC<WebcamProps> = ({
   wsMgr,
   capabilities,
-  isCameraEnabled,
-  setIsCameraEnabled,
+  inputs,
+  updateInput,
 }) => {
+  // @ts-ignore
   const cameraRef = useRef<Camera | null>(null);
   const [isCameraMounted, setIsCameraMounted] = useState(false);
   const [frameIntervalId, setFrameIntervalId] = useState<NodeJS.Timeout | null>(
@@ -34,7 +44,7 @@ const Webcam = ({
 
       // Only set camera enabled if permission was just granted
       if (status === "granted") {
-        setIsCameraEnabled(true); // Directly set to true
+        updateInput("camera", { enabled: true });
         console.log("status is set to granted");
         capabilities.capabilities.input.camera[0].disabled = false;
 
@@ -48,7 +58,7 @@ const Webcam = ({
       console.error("Camera permission error:", error);
       capabilities.capabilities.input.camera[0].disabled = true;
       // wsMgr.current?.send(JSON.stringify(capabilities));
-      setTempCameraEnable(false);
+      updateInput("camera", { slider: false });
     }
   };
 
@@ -113,7 +123,7 @@ const Webcam = ({
   };
 
   const stopCameraFeed = () => {
-    setIsCameraEnabled(false);
+    updateInput("camera", { enabled: false });
     setIsCameraMounted(false);
     wsMgr.current?.send(
       JSON.stringify({
@@ -125,7 +135,7 @@ const Webcam = ({
   };
 
   useEffect(() => {
-    if (tempCameraEnable) {
+    if (inputs.camera.slider) {
       changeCameraState();
     } else {
       stopCameraFeed();
@@ -149,7 +159,7 @@ const Webcam = ({
     // } else {
     //   stopCameraFeed();
     // }
-  }, [isCameraEnabled]);
+  }, [inputs.camera.enabled]);
 
   const flipCamera = () => {
     setFacing((current) => (current === "back" ? "front" : "back"));
