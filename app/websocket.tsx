@@ -62,7 +62,7 @@ export class WebSocketManager {
     }
   }
 
-  send(data: string) {
+  send(data: any) {
     if (!this.webSocket) {
       console.error("websocket is not initialized");
       return;

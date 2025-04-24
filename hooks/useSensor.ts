@@ -5,7 +5,6 @@ import {
   Gyroscope,
   GyroscopeMeasurement,
 } from "expo-sensors";
-// @ts-ignore
 import { compress } from "lz4js";
 import { WebSocketManager } from "../app/websocket";
 import { getASCII } from "../utils/littleHelpers";

@@ -31,16 +31,6 @@ export default function GodotPage() {
     accel: { slider: false, enabled: false },
   });
 
-  function updateInput(
-    name: "camera" | "gyro" | "accel",
-    changes: Partial<{ slider: boolean; enabled: boolean }>
-  ) {
-    setInputs((prev) => ({
-      ...prev,
-      [name]: { ...prev[name], ...changes },
-    }));
-  }
-
   // Get FEAGI URL
   useEffect(() => {
     const plugGodot = async () => {
@@ -57,12 +47,10 @@ export default function GodotPage() {
 
   // Landscape / portrait
   useEffect(() => {
-    // Detect initial orientation
     const { width, height } = Dimensions.get("window");
     const initialOrientation = width > height ? "landscape" : "portrait";
     setDeviceOrientation(initialOrientation);
 
-    // Listen for orientation changes
     const handleOrientationChange = ({
       window,
     }: {
@@ -72,32 +60,35 @@ export default function GodotPage() {
       setDeviceOrientation(width > height ? "landscape" : "portrait");
     };
 
-    // Add event listener
     const subscription = Dimensions.addEventListener(
       "change",
       handleOrientationChange
     );
 
-    // Cleanup
     return () => {
       subscription.remove();
     };
   }, []);
 
-  useSensor({
-    sensorType: "acc",
-    inputs: inputs,
-    wsMgr: wsMgr,
-    capabilities: capabilities,
-  });
+  // Hamburger display
+  const toggleMenu = () => {
+    if (menuVisible) {
+      Animated.timing(slideAnim, {
+        toValue: -250,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+    setMenuVisible(!menuVisible);
+  };
 
-  useSensor({
-    sensorType: "gyro",
-    inputs: inputs,
-    wsMgr: wsMgr,
-    capabilities: capabilities,
-  });
-
+  // Open websocket when an input is enabled
   useEffect(() => {
     async function letsGetItStarted() {
       if (
@@ -114,6 +105,32 @@ export default function GodotPage() {
     letsGetItStarted();
   }, [inputs.accel.enabled, inputs.gyro.enabled, inputs.camera.enabled]);
 
+  // Hook to connect and send/receive gyro/acc data
+  useSensor({
+    sensorType: "acc",
+    inputs: inputs,
+    wsMgr: wsMgr,
+    capabilities: capabilities,
+  });
+
+  useSensor({
+    sensorType: "gyro",
+    inputs: inputs,
+    wsMgr: wsMgr,
+    capabilities: capabilities,
+  });
+
+  // Helpers to update input states
+  function updateInput(
+    name: "camera" | "gyro" | "accel",
+    changes: Partial<{ slider: boolean; enabled: boolean }>
+  ) {
+    setInputs((prev) => ({
+      ...prev,
+      [name]: { ...prev[name], ...changes },
+    }));
+  }
+
   const updateSensoryData = () => {
     setInputs((prev) => ({
       camera: { ...prev.camera, enabled: prev.camera.slider },
@@ -129,24 +146,6 @@ export default function GodotPage() {
       accel: { ...prev.accel, slider: prev.accel.enabled },
     }));
     setMobileSettingsModalVisible(false);
-  };
-
-  // Toggle the dropdown menu with sliding effect
-  const toggleMenu = () => {
-    if (menuVisible) {
-      Animated.timing(slideAnim, {
-        toValue: -250,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-    setMenuVisible(!menuVisible);
   };
 
   return (
