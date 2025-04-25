@@ -15,7 +15,7 @@ import { WebSocketManager } from "./websocket";
 import MobileSettings from "../components/MobileSettings";
 import HamburgerMenu from "../components/HamburgerMenu";
 import Webcam from "../components/Webcam";
-import useSensor from "../hooks/useSensor";
+import useCombinedSensors from "../hooks/useSensor";
 
 export default function GodotPage() {
   const [godot, onGodotChange] = useState("");
@@ -106,15 +106,7 @@ export default function GodotPage() {
   }, [inputs.accel.enabled, inputs.gyro.enabled, inputs.camera.enabled]);
 
   // Hook to connect and send/receive gyro/acc data
-  useSensor({
-    sensorType: "acc",
-    inputs: inputs,
-    wsMgr: wsMgr,
-    capabilities: capabilities,
-  });
-
-  useSensor({
-    sensorType: "gyro",
+  useCombinedSensors({
     inputs: inputs,
     wsMgr: wsMgr,
     capabilities: capabilities,

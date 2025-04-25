@@ -1,16 +1,10 @@
-import { useEffect } from "react";
-import {
-  Accelerometer,
-  AccelerometerMeasurement,
-  Gyroscope,
-  GyroscopeMeasurement,
-} from "expo-sensors";
+import { useEffect, useRef } from "react";
+import { Accelerometer, Gyroscope } from "expo-sensors";
 import { compress } from "lz4js";
+import constructIMUToFEAGI from "@/utils/constructIMUToFEAGI";
 import { WebSocketManager } from "../app/websocket";
-import { getASCII } from "../utils/littleHelpers";
 
-interface UseSensorProps {
-  sensorType: "acc" | "gyro";
+interface UseCombinedSensorsProps {
   inputs: {
     accel: { slider: boolean; enabled: boolean };
     gyro: { slider: boolean; enabled: boolean };
@@ -20,238 +14,64 @@ interface UseSensorProps {
   capabilities: any;
 }
 
-const useSensor = ({
-  sensorType,
+const useCombinedSensors = ({
   inputs,
   wsMgr,
   capabilities,
-}: UseSensorProps) => {
-  const sensorEnabled =
-    sensorType === "acc" ? inputs.accel.enabled : inputs.gyro.enabled;
-  const Sensor = sensorType === "acc" ? Accelerometer : Gyroscope;
-  const sensorName = sensorType === "acc" ? "accelerometer" : "gyro";
-  const ASCII = sensorType === "acc" ? getASCII("rawACC") : getASCII("rawGYR");
-
-  const formatAccGyroData = (
-    data: AccelerometerMeasurement | GyroscopeMeasurement
-  ) => {
-    const formatted = [
-      ...ASCII,
-      3, // length
-      0,
-      0,
-      0,
-      data.x,
-      1,
-      0,
-      0,
-      data.y,
-      2,
-      0,
-      0,
-      data.z,
-    ];
-
-    const compressed = compress(
-      new TextEncoder().encode(JSON.stringify(formatted))
-    );
-
-    return compressed;
-  };
+}: UseCombinedSensorsProps) => {
+  const latestAcc = useRef<number[] | null>(null);
+  const latestGyr = useRef<number[] | null>(null);
 
   useEffect(() => {
-    if (sensorEnabled) {
-      async function enableSensor() {
-        if (!Sensor.hasListeners()) {
-          Sensor.setUpdateInterval(1000);
-          capabilities.capabilities.input[sensorName][0].disabled = false;
+    let accListener: any, gyrListener: any;
 
-          Sensor.addListener((data) => {
-            console.log(data);
-            if (!wsMgr.current) {
-              console.error(
-                `No websocket found. Skipping sending ${sensorName} data.`
-              );
-              return;
-            }
-            if (!data?.x) {
-              console.error(
-                `Got ${sensorName} data, but it doesn't have an x value:`,
-                data
-              );
-              return;
-            }
-            const compressed = formatAccGyroData(data);
-            wsMgr.current?.send(compressed);
-          });
-        }
-      }
-
-      enableSensor();
-
-      // Cleanup
-      return () => {
-        Sensor.removeAllListeners();
-        capabilities.capabilities.input[sensorName][0].disabled = true;
-      };
+    // Enable/disable in capabilities as appropriate
+    if (inputs.accel.enabled) {
+      capabilities.capabilities.input["accelerometer"][0].disabled = false;
+      Accelerometer.setUpdateInterval(50);
+      accListener = Accelerometer.addListener((data) => {
+        latestAcc.current = [data.x, data.y, data.z];
+      });
     } else {
-      Sensor.removeAllListeners();
-      capabilities.capabilities.input[sensorName][0].disabled = true;
+      capabilities.capabilities.input["accelerometer"][0].disabled = true;
     }
-  }, [sensorEnabled, sensorType, wsMgr, capabilities]);
+
+    if (inputs.gyro.enabled) {
+      capabilities.capabilities.input["gyro"][0].disabled = false;
+      Gyroscope.setUpdateInterval(50);
+      gyrListener = Gyroscope.addListener((data) => {
+        latestGyr.current = [data.x, data.y, data.z];
+      });
+    } else {
+      capabilities.capabilities.input["gyro"][0].disabled = true;
+    }
+
+    // Send both sensors together at a regular interval
+    const interval = setInterval(() => {
+      if (!wsMgr.current) return;
+      if (!inputs.accel.enabled && !inputs.gyro.enabled) return;
+
+      const buffer = constructIMUToFEAGI({
+        acc: inputs.accel.enabled ? latestAcc.current ?? undefined : undefined,
+        gyr: inputs.gyro.enabled ? latestGyr.current ?? undefined : undefined,
+      });
+
+      if (buffer) {
+        console.log(buffer);
+        wsMgr.current.send(compress(buffer));
+      }
+    }, 50);
+
+    // Cleanup
+    return () => {
+      accListener && accListener.remove();
+      gyrListener && gyrListener.remove();
+      clearInterval(interval);
+      // On cleanup, mark both as disabled
+      capabilities.capabilities.input["accelerometer"][0].disabled = true;
+      capabilities.capabilities.input["gyro"][0].disabled = true;
+    };
+  }, [inputs.accel.enabled, inputs.gyro.enabled, wsMgr]);
 };
 
-export default useSensor;
-
-// let minAccel = { x: Infinity, y: Infinity, z: Infinity };
-// let maxAccel = { x: -Infinity, y: -Infinity, z: -Infinity };
-// let minGyro = { x: Infinity, y: Infinity, z: Infinity };
-// let maxGyro = { x: -Infinity, y: -Infinity, z: -Infinity };
-
-// const [hasAccelerometerPermission, setHasAccelerometerPermission] = useState(false);
-//   useEffect(() => {
-//     initializeSocket(capabilities);
-//     console.log("initializing socket");
-//   }, []);
-
-// const handleAccelPermission = async () => {
-// 	const { status: permissionStatus } = await Accelerometer.requestPermissionsAsync();
-// 	if (permissionStatus === 'granted') {
-// 		setHasAccelerometerPermission(true);
-// 	}
-// }
-//
-
-// const updateCapabilities = (type: string, data) => {
-//   minGyro.x = Math.min(minGyro.x, data.x);
-//   minGyro.y = Math.min(minGyro.y, data.y);
-//   minGyro.z = Math.min(minGyro.z, data.z);
-
-//   maxGyro.x = Math.max(maxGyro.x, data.x);
-//   maxGyro.y = Math.max(maxGyro.y, data.y);
-//   maxGyro.z = Math.max(maxGyro.z, data.z);
-
-//   if (type === "gyro") {
-//     //   capabilities.capabilities.input.gyro[0].min_value = [
-//     //     minGyro.x,
-//     //     minGyro.y,
-//     //     minGyro.z,
-//     //   ];
-//     //   capabilities.capabilities.input.gyro[0].max_value = [
-//     //     maxGyro.x,
-//     //     maxGyro.y,
-//     //     maxGyro.z,
-//     //   ];
-//   } else {
-//     // capabilities.capabilities.input.accelerometer[0].min_value = [
-//     //   minAccel.x,
-//     //   minAccel.y,
-//     //   minAccel.z,
-//     // ];
-//     // capabilities.capabilities.input.accelerometer[0].max_value = [
-//     //   maxAccel.x,
-//     //   maxAccel.y,
-//     //   maxAccel.z,
-//     // ];
-//   }
-// };
-
-// const formatAccGyroData = (
-//   data: AccelerometerMeasurement | GyroscopeMeasurement,
-//   type: string
-// ) => {
-//   const formatted = [
-//     ...(type === "acc" ? accelerometerASCII : gyroASCII),
-//     12, // width/length
-//     0, // height (N/A here)
-//     0,
-//     0,
-//     0,
-//     data.x,
-//     1,
-//     0,
-//     0,
-//     data.y,
-//     2,
-//     0,
-//     0,
-//     data.z,
-//   ];
-
-//   const compressed = compress(
-//     new TextEncoder().encode(JSON.stringify(formatted))
-//   );
-
-//   return compressed;
-// };
-
-// useEffect(() => {
-//   async function letsGetItStarted() {
-//     if (
-//       inputs.accel.enabled ||
-//       inputs.gyro.enabled ||
-//       inputs.camera.enabled
-//     ) {
-//       console.log("initializing ws");
-//       if (!wsMgr.current) wsMgr.current = new WebSocketManager(capabilities);
-//       await wsMgr.current.initialize();
-//     }
-//   }
-
-//   letsGetItStarted();
-
-//   if (inputs.accel.enabled && !Accelerometer.hasListeners()) {
-//     Accelerometer.setUpdateInterval(1000);
-//     capabilities.capabilities.input.accelerometer[0].disabled = false;
-
-//     Accelerometer.addListener((data) => {
-//       // console.log("ACCELEROMETER DATA:", data);
-//       if (!wsMgr.current) {
-//         console.error(
-//           "No websocket found. Skipping sending accelerometer data."
-//         );
-//         return;
-//       }
-//       if (!data?.x) {
-//         console.error(
-//           "Got accelerometer data, but it doesn't have an x value:",
-//           data
-//         );
-//         return;
-//       }
-
-//       const compressed = formatAccGyroData(data, "acc");
-//       wsMgr.current?.send(compressed);
-//     });
-
-//     // return () => sub.remove(); // Proper cleanup
-//   } else if (!inputs.accel.enabled && Accelerometer.hasListeners()) {
-//     Accelerometer.removeAllListeners();
-//     capabilities.capabilities.input.accelerometer[0].disabled = true;
-//   }
-//   // else if (!isAccelerometerEnabled && !hasAccelerometerPermission) {
-//   // handleAccelPermission();
-//   // }
-
-//   if (inputs.gyro.enabled && !Gyroscope.hasListeners()) {
-//     Gyroscope.setUpdateInterval(1000);
-//     capabilities.capabilities.input.gyro[0].disabled = false;
-
-//     Gyroscope.addListener((data) => {
-//       // console.log("GYROSCOPE DATA:", data);
-//       if (!wsMgr.current) {
-//         console.error("No websocket found. Skipping sending gyro data.");
-//         return;
-//       }
-//       if (!data?.x) {
-//         console.error("Got gyro data, but it doesn't have an x value:", data);
-//         return;
-//       }
-//       const compressed = formatAccGyroData(data, "gyro");
-//       wsMgr.current?.send(compressed);
-//     });
-//   } else if (!inputs.gyro.enabled && Gyroscope.hasListeners()) {
-//     Gyroscope.removeAllListeners();
-//     capabilities.capabilities.input.gyro[0].disabled = true;
-//   }
-// }, [inputs.accel.enabled, inputs.gyro.enabled, inputs.camera.enabled]);
+export default useCombinedSensors;
