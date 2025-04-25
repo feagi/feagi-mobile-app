@@ -1,66 +1,67 @@
-import { Pressable, Text, View, StyleSheet, TouchableOpacity, Button, Image, TextInput, Alert } from 'react-native';
-import { Link, router } from 'expo-router';
-import React, {useEffect, useState} from "react"
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import LoginHandle from "./LoginHandle";
+import {
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Signin() {
-
-  const [text, onChangeText] = useState('');
-  const [API, onAPIChange] = useState('');
-  const [magicLink, onMagicLinkChange] = useState('');
-  const [apiText, onApiTextChange] = useState('');
+  const [text, onChangeText] = useState("");
+  const [API, onAPIChange] = useState("");
+  const [magicLink, onMagicLinkChange] = useState("");
+  const [apiText, onApiTextChange] = useState("");
   //ok so make it so they can access the plug in thing
 
   //This is where the API methods go!
 
+  //THIS CODE IS GOING TO await AsyncStorage.setItem('Key1', 'Ben1');
+  const apiCall = async (api: string) => {
+    //fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJBZk9RN1BEOFdvZjNDTUtkeEg4Y1RRU2lmSWgyIn0.ipgP6Ifby86zsRDKK6hhW9ZwfVYHP266uaZstwdN25M')
+    try {
+      console.log(
+        "https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=" +
+          api
+      );
+      const response = await fetch(
+        "https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=" +
+          api
+      );
 
-
-//THIS CODE IS GOING TO await AsyncStorage.setItem('Key1', 'Ben1');
-	const apiCall = async (api: string) =>{
-          //fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJBZk9RN1BEOFdvZjNDTUtkeEg4Y1RRU2lmSWgyIn0.ipgP6Ifby86zsRDKK6hhW9ZwfVYHP266uaZstwdN25M')
-          try{
-			  console.log("https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=" + api);
-              const response = await fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=' + api)
-
-	          const json = await response.json()
-	          console.log("json is: " + json.toString());
-	          console.log("hello " + json.feagi_url);
-	          onMagicLinkChange(json.feagi_url);
-	          console.log("feagi url: " + json.feagi_url);
-	          await AsyncStorage.setItem("user", (json.feagi_url).toString());
-	          return(json);
-          }
-    	  catch(error) {
-			  console.error(error);
-			  console.log("oh boy");
-            }
-		};
+      const data = await response.json();
+      console.log("API response:", data);
+      onMagicLinkChange(data.feagi_url);
+      await AsyncStorage.setItem("userSession", data.feagi_url);
+      return data;
+    } catch (error) {
+      console.error(error);
+      console.log("oh boy");
+    }
+  };
 
   const regApiCall = async (api: string) => {
     try {
-      //fetch('https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJBZk9RN1BEOFdvZjNDTUtkeEg4Y1RRU2lmSWgyIn0.ipgP6Ifby86zsRDKK6hhW9ZwfVYHP266uaZstwdN25M')
-      const response = await fetch(api)
-      const json = await response.json()
+      const response = await fetch(api);
+      const json = await response.json();
 
       console.log(json);
       //onMagicLinkChange(json.feagi_url);
       onApiTextChange(json);
-      return (json);
-    }
-
-    catch (error) {
+      return json;
+    } catch (error) {
       console.error(error);
     }
   };
 
-
-
   useEffect(() => {
-
     const superFunction = async () => {
       try {
-        const addNum = await regApiCall(magicLink + "/v1/burst_engine/burst_counter");
+        const addNum = await regApiCall(
+          magicLink + "/v1/burst_engine/burst_counter"
+        );
         console.log(addNum);
         onApiTextChange(addNum);
         console.log("api should be changing and showing here");
@@ -71,49 +72,59 @@ export default function Signin() {
     superFunction();
   }, [magicLink]);
 
-
   //add instructions or connecting messaged or something
   return (
-
     <View style={styles.container}>
-
       <Text style={[styles.text, { fontSize: 30, marginBottom: 65 }]}>
         Log In
       </Text>
 
-	<TextInput style={[styles.text, {marginBottom: 15}]}
-          placeholderTextColor='gray'
-          onChangeText={onChangeText}
-          value={text}
-          placeholder="Enter API Key"
-    />
-
+      <TextInput
+        style={[styles.text, { marginBottom: 15 }]}
+        placeholderTextColor="gray"
+        onChangeText={onChangeText}
+        value={text}
+        placeholder="Enter API Key"
+      />
 
       <TouchableOpacity
-        style={{ height: 60, width: 200, backgroundColor: '#484a6e', justifyContent: 'center', alignItems: 'center', borderRadius: 10, borderWidth: 3, borderColor: '#2e3133', marginBottom: 50 }}
-        onPress={() => apiCall(text)}>
-
+        style={{
+          height: 60,
+          width: 200,
+          backgroundColor: "#484a6e",
+          justifyContent: "center",
+          alignItems: "center",
+          borderRadius: 10,
+          borderWidth: 3,
+          borderColor: "#2e3133",
+          marginBottom: 50,
+        }}
+        onPress={() => apiCall(text)}
+      >
         <Text style={styles.text}>Confirm Link</Text>
-
       </TouchableOpacity>
 
       <Text style={styles.info}>{"MagicLink: " + magicLink}</Text>
       <Text style={styles.info}>{"API Connection Number: " + apiText}</Text>
 
-
-	<TouchableOpacity
-    	    style={{ height: 60, width: 200, backgroundColor:'#484a6e', justifyContent: 'center', alignItems: 'center',borderRadius: 10, borderWidth: 3, borderColor:'#2e3133', marginBottom: 50}}
-    	    onPress = {() => router.replace('/godotpage')}>
-
-            <Text style={styles.text}>next</Text>
-
-    </TouchableOpacity>
-
+      <TouchableOpacity
+        style={{
+          height: 60,
+          width: 200,
+          backgroundColor: "#484a6e",
+          justifyContent: "center",
+          alignItems: "center",
+          borderRadius: 10,
+          borderWidth: 3,
+          borderColor: "#2e3133",
+          marginBottom: 50,
+        }}
+        onPress={() => router.replace("/godotpage")}
+      >
+        <Text style={styles.text}>next</Text>
+      </TouchableOpacity>
     </View>
   );
-
-
-
 }
 
 const styles = StyleSheet.create({
@@ -121,18 +132,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: '#353839',
+    backgroundColor: "#353839",
   },
   text: {
-    color: 'white',
-    fontSize: 20
+    color: "white",
+    fontSize: 20,
   },
   info: {
-    color: 'white',
+    color: "white",
     fontSize: 20,
     justifyContent: "flex-start",
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     alignItems: "flex-end",
     margin: 10,
-  }
+  },
 });
