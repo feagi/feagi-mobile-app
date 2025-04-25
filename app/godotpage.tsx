@@ -11,6 +11,12 @@ import MobileSettings from "../components/MobileSettings";
 import HamburgerMenu from "../components/HamburgerMenu";
 import Webcam from "../components/Webcam";
 
+
+type CameraPermissionResponse = {
+	status: 'granted' | 'denied' | 'undetermined';
+	granted: boolean;
+};
+
 export default function GodotPage() {
   const [godot, onGodotChange] = useState("");
   const [menuVisible, setMenuVisible] = useState(false); // hamburger menu
