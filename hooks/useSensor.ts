@@ -89,6 +89,7 @@ const useSensor = ({
 
       enableSensor();
 
+      // Cleanup
       return () => {
         Sensor.removeAllListeners();
         capabilities.capabilities.input[sensorName][0].disabled = true;
