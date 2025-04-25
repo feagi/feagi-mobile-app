@@ -1,11 +1,48 @@
 import { Pressable, Text, View, StyleSheet, TouchableOpacity, Button, Image, TextInput, Alert } from 'react-native';
 import { Link, router } from 'expo-router';
 import React, {useEffect, useState} from "react"
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export default function Plugin() {
+	const [text, onChangeText] = useState(0);
 
 	//ok so make it so they can access the plug in thing
+	const _retrieveData = async () => {
+                   try {
+                     //const value = await AsyncStorage.getItem('KEY1');
+                     AsyncStorage.getAllKeys((err, keys) => {
+						 console.log(keys);
+						 if(keys === undefined || keys.length == 0){
+							 console.log("no keys")
+							 }
+						 else{
+							 console.log("yes keys")
+							 }
+                       AsyncStorage.multiGet(keys, (err, stores) => {
+                         stores.map((result, i, store) => {
+                           // get at each store's key/value so you can work with it
+                           let key = store[i][0];
+                           let value = store[i][1];
+                           console.log("key: " + key + " Value: " + value);
+                           AsyncStorage.removeItem(key);
+                         });
+                       });
+                     });
+                   } catch (error) {
+    				   console.log(error);
+                     // Error retrieving data
+                   }
+			   return value
+                 };
+
+	 useEffect(() => {
+
+	    //console.log(await _retrieveData());
+        _retrieveData();
+
+    		}, []);
+
 
     return (
 
@@ -43,6 +80,3 @@ const styles = StyleSheet.create({
 	  fontSize: 20
   }
 });
-
-
-export default Plugin

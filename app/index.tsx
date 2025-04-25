@@ -1,86 +1,99 @@
-import { Text, View , StyleSheet, TextInput, Button, Alert, Pressable } from "react-native";
-import { Link } from 'expo-router';
-//import * as React from 'react';
+import { Pressable, Text, View, Button, StyleSheet, Image, TextInput } from 'react-native';
+import { Link, router } from 'expo-router';
 import React, {useEffect, useState} from "react"
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import LoginHandle from "./LoginHandle";
+
+export default function Input() {
 
 
 
 
-export default function Index() {
+	const _storeData = async () => {
+		//await AsyncStorage.setItem('Key1', 'Ben1');
+		console.log("hrere ok"!)
+		await AsyncStorage.getItem('Key1', (err, result) => {
+			console.log(result + "the result");
+		});
+	}
 
-  const [text, onChangeText] = useState(0);
-  const [number, onChangeNumber] = useState(0);
-  const [API, onAPIChange] = useState('');
-  const [magicLink, onMagicLinkChange] = useState('');
-  const [apiText, onApiTextChange] = useState(0);
+	const _checkLogin = async () => {
+		const userData = await AsyncStorage.getItem("user");
+		try{
+			if(userData === null){
+				console.log("no key");
+				return true;
+
+			}
+			else{
+
+				console.log("userdata: " + userData);
+				return false;
+			}
+		}
+		catch(error){
+			console.log(error);
+			console.log("uhhh");
+		}
+
+	}
+
+
+	useEffect(() => {
+
+		const userLogin = async () =>{
+
+			let boolCheck = await _checkLogin();
+			console.log("boolean " + boolCheck);
+			if(await _checkLogin()){
+				console.log("no keys")
+				const timer = setTimeout(() => {
+
+                    router.replace('/plugin');
+
+                    }, 3000);
+                    console.log("done");
+
+                return () => clearTimeout(timer);
+
+			}
+			else{
+				console.log("yes keys going to godot page");
+                router.replace('/godotpage');
+			}
+		}
+		userLogin();
+
+
+	}, [])
 
 
 
-  //https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJBZk9RN1BEOFdvZjNDTUtkeEg4Y1RRU2lmSWgyIn0.ipgP6Ifby86zsRDKK6hhW9ZwfVYHP266uaZstwdN25M
+	//THIS CODE WILL SEARCH THE SAVE API THING
 
 
-//https://storage.googleapis.com/nrs_brain_visualizer/1738016771/index.html?ip_address=user-scarbctkdkexhcscwmjl-feagi.feagi-k8s-production.neurorobotics.studio&port_disabled=true&websocket_url=wss://user-scarbctkdkexhcscwmjl-feagi.feagi-k8s-production.neurorobotics.studio/p9050&http_type=HTTPS://
+	return (
+	<View
 
-//we are really cooking here!!!!!
-//this is the code for the background FEAGI API call its in the old app docs and its really cool
+	style={styles.container}
+	>
+	<Text style={[styles.text, { marginVertical: 20}]}>FEAGI Monitor</Text>
+	<Image style={{width: 200, height: 200}} source={require('../assets/images/placeholder.png')} />
 
 
-  return (
-    <View
-      style={
-		  styles.container
-
-      }
-    >
-      <Text style={styles.text}>Edit app/index.tsx to edit this screen.</Text>
-      <Text style={styles.text}>{number}</Text>
-      <TextInput style={styles.text}
-	      placeholderTextColor='gray'
-	      onChangeText={onChangeText}
-	      value={text}
-	      placeholder="useless placeholder"
-      />
-
-      <Button
-        //onPress = {() => Alert.alert(text)}
-        onPress = {() =>
-            Alert.alert("click the Link to start the browser")}
-        title="click me!"
-        color="#841584"
-        accessibilityLabel="Learn more about this purple button"
-      />
-
-       <Text style={styles.text}>{magicLink}</Text>
-       <Text style={styles.text}>{apiText}</Text>
-
-       <Link replace href="/input" asChild>
-            <Pressable>
-                <Text style={[styles.text, {margin: 30, fontSize: 20}]}>Click To Start Project Demo</Text>
-            </Pressable>
-       </Link>
-    </View>
-  );
+	</View>
+	);
 }
-
-
-
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: '#353839',
+	flex: 1,
+	justifyContent: "center",
+	alignItems: "center",
+	backgroundColor: '#353839',
   },
   text: {
 	  color: 'white',
+	  fontSize: 30,
   }
 });
-
-
-
-export default Index;
-
-
-
-
