@@ -1,9 +1,9 @@
-import { WebSocketManager } from "../app/websocket";
-import { Inputs, UpdateInput } from "../types/inputs";
-import { Ionicons } from "@expo/vector-icons";
-import { Camera, CameraType, CameraView } from "expo-camera";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
+import { Camera, CameraType, CameraView } from "expo-camera";
+import { Ionicons } from "@expo/vector-icons";
+import { WebSocketManager } from "../app/websocket";
+import { Inputs, UpdateInput } from "../types/inputs";
 
 type CameraPermissionResponse = {
   status: "granted" | "denied" | "undetermined";
@@ -33,39 +33,32 @@ const Webcam: React.FC<WebcamProps> = ({
   const [permission, setPermission] = useState<CameraPermissionResponse | null>(
     null
   );
-
   // const [lastFrame, setLastFrame] = useState<string | null>(null);
 
   const changeCameraState = async () => {
     try {
       const { status } = await Camera.requestCameraPermissionsAsync();
-      //   console.log("Camera permission status:", status);
       setPermission({ status, granted: status === "granted" });
 
       // Only set camera enabled if permission was just granted
       if (status === "granted") {
         updateInput("camera", { enabled: true });
         console.log("status is set to granted");
-        capabilities.capabilities.input.camera[0].disabled = false;
-
-        // Optional: Update camera parameters if needed
-        capabilities.capabilities.input.camera[0].threshold_default = 50; // Example
-        capabilities.capabilities.input.camera[0].mirror = false;
-
-        wsMgr.current?.send(JSON.stringify(capabilities));
+        // capabilities.capabilities.input.camera[0].disabled = false;
+        // capabilities.capabilities.input.camera[0].threshold_default = 50; // Example
+        // capabilities.capabilities.input.camera[0].mirror = false;
+        // wsMgr.current?.send(JSON.stringify(capabilities));
       }
     } catch (error) {
       console.error("Camera permission error:", error);
-      capabilities.capabilities.input.camera[0].disabled = true;
+      // capabilities.capabilities.input.camera[0].disabled = true;
       // wsMgr.current?.send(JSON.stringify(capabilities));
       updateInput("camera", { slider: false });
     }
   };
 
-  // Ed added this
   const startCameraFeed = async () => {
     try {
-      console.log("started camera feed");
       // Start frame capture interval
       const frameInterval = setInterval(async () => {
         if (cameraRef.current) {
@@ -77,14 +70,6 @@ const Webcam: React.FC<WebcamProps> = ({
               skipProcessing: true,
             });
 
-            // console.log("Raw Camera Frame:", {
-            //   base64Length: photo.base64?.length,
-            //   width: photo.width,
-            //   height: photo.height,
-            //   uri: photo.uri,
-            //   base64Prefix: photo.base64?.substring(0, 30) + "...", // Show first 30 chars of base64
-            // });
-
             // Combine with other sensor data
             const combinedData = {
               timestamp: Date.now(),
@@ -93,14 +78,10 @@ const Webcam: React.FC<WebcamProps> = ({
                 width: photo.width,
                 height: photo.height,
               },
-              // sensors: {
-              // 	accelerometer: minAccel, // Your existing min/max values
-              // 	gyroscope: minGyro
-              // }
             };
-
+            // console.log(combinedData);
             // Send via WebSocket
-            wsMgr.current?.send(JSON.stringify(combinedData));
+            // wsMgr.current?.send(JSON.stringify(combinedData));
           } catch (error) {
             console.error("Frame capture error:", error);
           }
@@ -125,23 +106,23 @@ const Webcam: React.FC<WebcamProps> = ({
   const stopCameraFeed = () => {
     updateInput("camera", { enabled: false });
     setIsCameraMounted(false);
-    wsMgr.current?.send(
-      JSON.stringify({
-        type: "camera_control",
-        status: "deactivated",
-        timestamp: Date.now(),
-      })
-    );
+    console.log("stop");
+    // wsMgr.current?.send(
+    //   JSON.stringify({
+    //     type: "camera_control",
+    //     status: "deactivated",
+    //     timestamp: Date.now(),
+    //   })
+    // );
   };
 
   useEffect(() => {
     if (inputs.camera.slider) {
       changeCameraState();
     } else {
+      console.log("stopcamerafeed called");
       stopCameraFeed();
       capabilities.capabilities.input.camera[0].disabled = true;
-
-      console.log("stopcamerafeed called");
     }
 
     // if (isCameraEnabled) {

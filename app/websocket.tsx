@@ -15,7 +15,7 @@ export class WebSocketManager {
 
   async initialize() {
     try {
-      this.magicLink = await AsyncStorage.getItem("user");
+      this.magicLink = await AsyncStorage.getItem("userSession");
 
       if (!this.magicLink) {
         console.error("could not get magic link from AsyncStorage");

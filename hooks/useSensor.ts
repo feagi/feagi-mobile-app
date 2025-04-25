@@ -27,23 +27,23 @@ const useCombinedSensors = ({
 
     // Enable/disable in capabilities as appropriate
     if (inputs.accel.enabled) {
-      capabilities.capabilities.input["accelerometer"][0].disabled = false;
+      // capabilities.capabilities.input["accelerometer"][0].disabled = false;
       Accelerometer.setUpdateInterval(50);
       accListener = Accelerometer.addListener((data) => {
         latestAcc.current = [data.x, data.y, data.z];
       });
     } else {
-      capabilities.capabilities.input["accelerometer"][0].disabled = true;
+      // capabilities.capabilities.input["accelerometer"][0].disabled = true;
     }
 
     if (inputs.gyro.enabled) {
-      capabilities.capabilities.input["gyro"][0].disabled = false;
+      // capabilities.capabilities.input["gyro"][0].disabled = false;
       Gyroscope.setUpdateInterval(50);
       gyrListener = Gyroscope.addListener((data) => {
         latestGyr.current = [data.x, data.y, data.z];
       });
     } else {
-      capabilities.capabilities.input["gyro"][0].disabled = true;
+      // capabilities.capabilities.input["gyro"][0].disabled = true;
     }
 
     // Send both sensors together at a regular interval
@@ -68,8 +68,8 @@ const useCombinedSensors = ({
       gyrListener && gyrListener.remove();
       clearInterval(interval);
       // On cleanup, mark both as disabled
-      capabilities.capabilities.input["accelerometer"][0].disabled = true;
-      capabilities.capabilities.input["gyro"][0].disabled = true;
+      // capabilities.capabilities.input["accelerometer"][0].disabled = true;
+      // capabilities.capabilities.input["gyro"][0].disabled = true;
     };
   }, [inputs.accel.enabled, inputs.gyro.enabled, wsMgr]);
 };

@@ -1,25 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  Dimensions,
-  ScrollView,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Animated, ScrollView, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import WebView from "react-native-webview";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import capabilities from "../constants/capabilities.js";
 import { WebSocketManager } from "./websocket";
+import useCombinedSensors from "../hooks/useSensor";
 import MobileSettings from "../components/MobileSettings";
 import HamburgerMenu from "../components/HamburgerMenu";
 import Webcam from "../components/Webcam";
-import useCombinedSensors from "../hooks/useSensor";
 
 export default function GodotPage() {
   const [godot, onGodotChange] = useState("");
-  const [deviceOrientation, setDeviceOrientation] = useState("portrait");
   const [menuVisible, setMenuVisible] = useState(false); // hamburger menu
   const slideAnim = useRef(new Animated.Value(-250)).current; // animation for sliding menu
   const [mobileSettingsModalVisible, setMobileSettingsModalVisible] =
@@ -34,40 +27,15 @@ export default function GodotPage() {
   // Get FEAGI URL
   useEffect(() => {
     const plugGodot = async () => {
-      const value = await AsyncStorage.getItem("user");
+      const value = await AsyncStorage.getItem("userSession");
       const concatLink = value?.slice(8);
       const wssLink = value?.replace("https", "wss");
-      const godotLink = `https://storage.googleapis.com/nrs_brain_visualizer/1738016771/index.html?ip_address=${concatLink}&port_disabled=true&websocket_url=${wssLink}/p9055&http_type=HTTPS://`;
+      const godotLink = `https://storage.googleapis.com/nrs_brain_visualizer_lite/1745608647/index.html?ip_address=${concatLink}&port_disabled=true&websocket_url=${wssLink}/p9055&http_type=HTTPS://`;
       console.log("godotLink: " + godotLink);
       onGodotChange(godotLink);
     };
 
     plugGodot();
-  }, []);
-
-  // Landscape / portrait
-  useEffect(() => {
-    const { width, height } = Dimensions.get("window");
-    const initialOrientation = width > height ? "landscape" : "portrait";
-    setDeviceOrientation(initialOrientation);
-
-    const handleOrientationChange = ({
-      window,
-    }: {
-      window: { width: number; height: number };
-    }) => {
-      const { width, height } = window;
-      setDeviceOrientation(width > height ? "landscape" : "portrait");
-    };
-
-    const subscription = Dimensions.addEventListener(
-      "change",
-      handleOrientationChange
-    );
-
-    return () => {
-      subscription.remove();
-    };
   }, []);
 
   // Hamburger display
@@ -193,7 +161,7 @@ export default function GodotPage() {
               source={{
                 uri: godot,
               }}
-              // source={require("../assets/feagi/index.html")}
+              // source={require("./feagi/index.html")}
               // ❗ NOTE: The below values are in place to be ultra-permissive to pinpoint display/interaction issues. They should be altered/eliminated where unneeded
               style={{ flex: 1 }}
               javaScriptEnabled={true}
@@ -204,6 +172,9 @@ export default function GodotPage() {
               mediaPlaybackRequiresUserAction={false}
               scalesPageToFit={true}
               bounces={false}
+              onNavigationStateChange={(navState) => {
+                console.log("WebView navigated to:", navState.url);
+              }}
               injectedJavaScriptBeforeContentStart={`
 								// Completely disable Web Audio API
 								(function() {

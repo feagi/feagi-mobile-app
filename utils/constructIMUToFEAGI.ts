@@ -32,9 +32,7 @@ const constructIMUToFEAGI = ({
 
     // values
     const addVal = (sensorData: number[] | undefined) => {
-      chunks.push(
-        sensorData ? toBytes.float32(sensorData) : toBytes.uint8([0, 0, 0])
-      );
+      chunks.push(toBytes.float32(sensorData ? sensorData : [0, 0, 0]));
     };
 
     addVal(gyr);
@@ -50,8 +48,6 @@ const constructIMUToFEAGI = ({
       finalBuffer.set(chunk, offset);
       offset += chunk.length;
     }
-
-    // console.log("returning constructed buffer:", finalBuffer);
 
     return finalBuffer;
   } catch (err) {

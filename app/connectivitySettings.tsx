@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Text,
   View,
@@ -8,7 +9,6 @@ import {
   Alert,
 } from "react-native";
 import { router } from "expo-router";
-import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -17,22 +17,22 @@ const ConnectivitySettings: React.FC = () => {
   const [magicLink, setMagicLink] = useState<string>("");
   const [apiResponse, setApiResponse] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [currentLink, setCurrentLink] = useState<string>("");
+  // const [currentLink, setCurrentLink] = useState<string>("");
 
-  useEffect(() => {
-    const loadCurrentLink = async () => {
-      try {
-        const storedLink = await AsyncStorage.getItem("user");
-        if (storedLink) {
-          setCurrentLink(storedLink);
-        }
-      } catch (error) {
-        console.error("Failed to load stored link:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const loadCurrentLink = async () => {
+  //     try {
+  //       const storedLink = await AsyncStorage.getItem("userSession");
+  //       if (storedLink) {
+  //         setCurrentLink(storedLink);
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to load stored link:", error);
+  //     }
+  //   };
 
-    loadCurrentLink();
-  }, []);
+  //   loadCurrentLink();
+  // }, []);
 
   // API call function
   const apiCall = async (api: string): Promise<void> => {
@@ -50,7 +50,6 @@ const ConnectivitySettings: React.FC = () => {
         AsyncStorage.multiRemove(keys);
       });
 
-      // console.log("https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=" + api);
       const response = await fetch(
         "https://us-prd-composer.neurorobotics.studio/v1/public/regional/magic/feagi_session?token=" +
           api
@@ -60,12 +59,11 @@ const ConnectivitySettings: React.FC = () => {
         throw new Error(`API request failed with status ${response.status}`);
       }
 
-      const json = await response.json();
-      console.log("response:", json);
-      setMagicLink(json.feagi_url);
-      console.log("feagi url: " + json.feagi_url);
-      await AsyncStorage.setItem("user", json.feagi_url.toString());
-      setCurrentLink(json.feagi_url);
+      const parsed = await response.json();
+      const url = parsed.feagi_url;
+      setMagicLink(url);
+      await AsyncStorage.setItem("userAPIKey", api);
+      await AsyncStorage.setItem("userSession", url);
       setApiResponse("Connection successful!");
 
       // Navigate back to the main view after a short delay
@@ -82,35 +80,33 @@ const ConnectivitySettings: React.FC = () => {
   };
 
   // Delete existing stored connection
-  const deleteStoredKey = async (): Promise<void> => {
-    try {
-      await AsyncStorage.removeItem("user");
-      setCurrentLink("");
-      setMagicLink("");
-      setApiResponse("");
-      Alert.alert("Success", "Stored connection deleted successfully");
-      setNetworkInput("");
-    } catch (error) {
-      console.error("Error deleting stored connection:", error);
-      Alert.alert("Error", "Failed to delete stored connection");
-    }
-  };
+  // const deleteStoredKey = async (): Promise<void> => {
+  //   try {
+  //     await AsyncStorage.removeItem("userSession");
+  //     setCurrentLink("");
+  //     setMagicLink("");
+  //     setApiResponse("");
+  //     Alert.alert("Success", "Stored connection deleted successfully");
+  //     setNetworkInput("");
+  //   } catch (error) {
+  //     console.error("Error deleting stored connection:", error);
+  //     Alert.alert("Error", "Failed to delete stored connection");
+  //   }
+  // };
 
   // Delete all AsyncStorage keys
-  const deleteKeys = () => {
-    AsyncStorage.getAllKeys((err, keys) => {
-      AsyncStorage.multiGet(keys, (err, stores) => {
-        stores.map((result, i, store) => {
-          // get at each store's key/value so you can work with it
-          console.log("deleting: ");
-          let key = store[i][0];
-          let value = store[i][1];
-          console.log("key: " + key + " Value: " + value);
-          AsyncStorage.removeItem(key);
-        });
-      });
-    });
-    console.log("Success", "All stored data deleted successfully");
+  const deleteKeys = async () => {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      if (keys.length === 0) {
+        console.log("No keys to delete.");
+        return;
+      }
+      await AsyncStorage.multiRemove(keys);
+      console.log("Success: All stored data deleted successfully");
+    } catch (error) {
+      console.error("Error deleting AsyncStorage keys:", error);
+    }
   };
 
   return (
@@ -173,11 +169,16 @@ const ConnectivitySettings: React.FC = () => {
 
         <Text style={styles.sectionHeader}>Neurorobotics Studio:</Text>
         <Text style={styles.instructionText}>
-          1) login at www.neurorobotics.studio
+          1) Log in on desktop at https://www.neurorobotics.studio
         </Text>
         <Text style={styles.instructionText}>
-          2) Obtain your API Key from Neurorobotics
+          2) Start an experiment, which will take you to the Brain Visualizer
         </Text>
+        <Text style={styles.instructionText}>
+          3) Click on the Embodiment button in the navbar, then click API Key to
+          copy. Keep it private!
+        </Text>
+        <Text style={styles.instructionText}>4) Paste your API key above</Text>
       </ScrollView>
     </View>
   );
